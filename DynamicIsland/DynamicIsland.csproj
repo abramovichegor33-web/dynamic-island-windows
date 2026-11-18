@@ -15,4 +15,8 @@
     <Description>Lightweight, hardware-accelerated, highly customizable Dynamic Island for Windows 10.</Description>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="NAudio.Wasapi" Version="2.2.1" />
+  </ItemGroup>
+
 </Project>

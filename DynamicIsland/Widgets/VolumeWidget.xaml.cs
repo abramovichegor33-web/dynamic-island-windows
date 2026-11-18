@@ -14,6 +14,8 @@ public partial class VolumeWidget : UserControl, IIslandWidget
     public FrameworkElement CompactView => CompactContainer;
     public FrameworkElement ExpandedView => ExpandedContainer;
 
+    private bool _isUpdatingUi;
+
     public VolumeWidget()
     {
         InitializeComponent();
@@ -28,16 +30,24 @@ public partial class VolumeWidget : UserControl, IIslandWidget
 
     private void UpdateUi(float vol, bool muted)
     {
-        int percent = (int)Math.Round(vol * 100);
-        string icon = muted ? "🔇" : (percent == 0 ? "🔈" : (percent < 50 ? "🔉" : "🔊"));
+        _isUpdatingUi = true;
+        try
+        {
+            int percent = (int)Math.Round(vol * 100);
+            string icon = muted ? "🔇" : (percent == 0 ? "🔈" : (percent < 50 ? "🔉" : "🔊"));
 
-        IconSpeaker.Text = icon;
-        TextPercent.Text = muted ? "Mute" : $"{percent}%";
-        VolBar.Value = muted ? 0 : percent;
+            IconSpeaker.Text = icon;
+            TextPercent.Text = muted ? "Mute" : $"{percent}%";
+            VolBar.Value = muted ? 0 : percent;
 
-        ExpIcon.Text = $"{icon} Громкость системы";
-        ExpPercent.Text = muted ? "Без звука" : $"{percent}%";
-        ExpSlider.Value = percent;
+            ExpIcon.Text = $"{icon} Громкость системы";
+            ExpPercent.Text = muted ? "Без звука" : $"{percent}%";
+            ExpSlider.Value = percent;
+        }
+        finally
+        {
+            _isUpdatingUi = false;
+        }
     }
 
     public void OnActivated()
@@ -54,6 +64,9 @@ public partial class VolumeWidget : UserControl, IIslandWidget
 
     private void ExpSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
     {
-        // slider can be extended to set volume if desired
+        if (!_isUpdatingUi && IsLoaded)
+        {
+            VolumeService.Instance.SetVolume((float)(e.NewValue / 100.0));
+        }
     }
 }
