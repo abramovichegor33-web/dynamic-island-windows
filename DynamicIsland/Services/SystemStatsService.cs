@@ -28,8 +28,11 @@ public class SystemStatsService
 
     private SystemStatsService()
     {
-        // Initial CPU baseline
-        SampleCpuBaseline();
+        try
+        {
+            SampleCpuBaseline();
+        }
+        catch { }
 
         _sampleTimer = new System.Threading.Timer(_ =>
         {
@@ -50,9 +53,12 @@ public class SystemStatsService
             float cpu = CalculateCpuPercent();
 
             // RAM
+            float ram = 0;
             var mem = new MEMORYSTATUSEX { dwLength = (uint)Marshal.SizeOf<MEMORYSTATUSEX>() };
-            GlobalMemoryStatusEx(ref mem);
-            float ram = mem.dwMemoryLoad;
+            if (GlobalMemoryStatusEx(ref mem))
+            {
+                ram = mem.dwMemoryLoad;
+            }
 
             // Battery (native Win32 GetSystemPowerStatus)
             int battery = 100;
@@ -85,48 +91,64 @@ public class SystemStatsService
 
     private void SampleCpuBaseline()
     {
-        if (GetSystemTimes(out var idle, out var kernel, out var user))
+        try
         {
-            _prevIdleTime = ToUInt64(idle);
-            _prevKernelTime = ToUInt64(kernel);
-            _prevUserTime = ToUInt64(user);
+            if (GetSystemTimes(out var idle, out var kernel, out var user))
+            {
+                _prevIdleTime = ToUInt64(idle);
+                _prevKernelTime = ToUInt64(kernel);
+                _prevUserTime = ToUInt64(user);
+            }
         }
+        catch { }
     }
 
     private float CalculateCpuPercent()
     {
-        if (!GetSystemTimes(out var idle, out var kernel, out var user))
+        try
+        {
+            if (!GetSystemTimes(out var idle, out var kernel, out var user))
+                return 0f;
+
+            ulong curIdle = ToUInt64(idle);
+            ulong curKernel = ToUInt64(kernel);
+            ulong curUser = ToUInt64(user);
+
+            ulong usrDiff = curUser - _prevUserTime;
+            ulong kerDiff = curKernel - _prevKernelTime;
+            ulong idlDiff = curIdle - _prevIdleTime;
+
+            _prevIdleTime = curIdle;
+            _prevKernelTime = curKernel;
+            _prevUserTime = curUser;
+
+            ulong sysDiff = usrDiff + kerDiff;
+            if (sysDiff == 0) return 0f;
+
+            double cpu = (1.0 - ((double)idlDiff / sysDiff)) * 100.0;
+            return (float)Math.Clamp(cpu, 0.0, 100.0);
+        }
+        catch
+        {
             return 0f;
-
-        ulong curIdle = ToUInt64(idle);
-        ulong curKernel = ToUInt64(kernel);
-        ulong curUser = ToUInt64(user);
-
-        ulong usrDiff = curUser - _prevUserTime;
-        ulong kerDiff = curKernel - _prevKernelTime;
-        ulong idlDiff = curIdle - _prevIdleTime;
-
-        _prevIdleTime = curIdle;
-        _prevKernelTime = curKernel;
-        _prevUserTime = curUser;
-
-        ulong sysDiff = usrDiff + kerDiff;
-        if (sysDiff == 0) return 0f;
-
-        double cpu = (1.0 - ((double)idlDiff / sysDiff)) * 100.0;
-        return (float)Math.Clamp(cpu, 0.0, 100.0);
+        }
     }
 
-    private static ulong ToUInt64(System.Runtime.InteropServices.ComTypes.FILETIME ft)
+    private static ulong ToUInt64(FILETIME ft)
     {
-        return ((ulong)ft.dwHighDateTime << 32) | (uint)ft.dwLowDateTime;
+        return ((ulong)ft.dwHighDateTime << 32) | ft.dwLowDateTime;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct FILETIME
+    {
+        public uint dwLowDateTime;
+        public uint dwHighDateTime;
     }
 
     [DllImport("kernel32.dll", SetLastError = true)]
-    private static extern bool GetSystemTimes(
-        out System.Runtime.InteropServices.ComTypes.FILETIME lpIdleTime,
-        out System.Runtime.InteropServices.ComTypes.FILETIME lpKernelTime,
-        out System.Runtime.InteropServices.ComTypes.FILETIME lpUserTime);
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool GetSystemTimes(out FILETIME lpIdleTime, out FILETIME lpKernelTime, out FILETIME lpUserTime);
 
     [StructLayout(LayoutKind.Sequential)]
     private struct MEMORYSTATUSEX
@@ -143,6 +165,7 @@ public class SystemStatsService
     }
 
     [DllImport("kernel32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool GlobalMemoryStatusEx(ref MEMORYSTATUSEX lpBuffer);
 
     [StructLayout(LayoutKind.Sequential)]
@@ -157,5 +180,6 @@ public class SystemStatsService
     }
 
     [DllImport("kernel32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool GetSystemPowerStatus(out SYSTEM_POWER_STATUS sps);
 }

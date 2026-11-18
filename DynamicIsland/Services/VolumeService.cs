@@ -2,6 +2,10 @@ using System.Runtime.InteropServices;
 
 namespace DynamicIsland.Services;
 
+/// <summary>
+/// Crash-free CoreAudio volume service using safe timer polling.
+/// Avoids unmanaged COM callback memory violations.
+/// </summary>
 public class VolumeService
 {
     private static readonly Lazy<VolumeService> _instance = new(() => new VolumeService());
@@ -12,10 +16,9 @@ public class VolumeService
 
     public event Action<float, bool>? VolumeChanged;
 
-    // Pin references to prevent GC collection while unmanaged COM callbacks are active
     private IMMDevice? _device;
     private IAudioEndpointVolume? _endpoint;
-    private AudioEndpointVolumeCallback? _callback;
+    private System.Threading.Timer? _pollTimer;
 
     private VolumeService()
     {
@@ -34,26 +37,34 @@ public class VolumeService
                 _device.Activate(ref iid, 1 /* CLSCTX_INPROC_SERVER */, IntPtr.Zero, out var audioEndpointObj);
                 _endpoint = (IAudioEndpointVolume)audioEndpointObj;
 
-                _endpoint.GetMasterVolumeLevelScalar(out float vol);
-                _endpoint.GetMute(out bool mute);
-                CurrentVolume = vol;
-                IsMuted = mute;
+                CheckVolume();
 
-                _callback = new AudioEndpointVolumeCallback(this);
-                _endpoint.RegisterControlChangeNotify(_callback);
+                // Poll volume state every 300ms safely without unmanaged callback crashes
+                _pollTimer = new System.Threading.Timer(_ => CheckVolume(), null, 500, 300);
             }
         }
         catch
         {
-            // fallback if audio device unavailable
+            // fallback
         }
     }
 
-    internal void NotifyVolumeChanged(float volume, bool muted)
+    private void CheckVolume()
     {
-        CurrentVolume = volume;
-        IsMuted = muted;
-        VolumeChanged?.Invoke(volume, muted);
+        if (_endpoint == null) return;
+        try
+        {
+            _endpoint.GetMasterVolumeLevelScalar(out float vol);
+            _endpoint.GetMute(out bool mute);
+
+            if (Math.Abs(vol - CurrentVolume) > 0.01f || mute != IsMuted)
+            {
+                CurrentVolume = vol;
+                IsMuted = mute;
+                VolumeChanged?.Invoke(vol, mute);
+            }
+        }
+        catch { }
     }
 
     [ComImport]
@@ -78,63 +89,18 @@ public class VolumeService
     [Guid("5CDF2C82-841E-4546-9722-0CF74078229A"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
     private interface IAudioEndpointVolume
     {
-        [PreserveSig]
-        int RegisterControlChangeNotify(IAudioEndpointVolumeCallback pNotify);
-        [PreserveSig]
-        int UnregisterControlChangeNotify(IAudioEndpointVolumeCallback pNotify);
+        int NotImpl0();
         int NotImpl1();
         int NotImpl2();
-        [PreserveSig]
-        int SetMasterVolumeLevelScalar(float fLevel, ref Guid pguidEventContext);
         int NotImpl3();
-        [PreserveSig]
-        int GetMasterVolumeLevelScalar(out float pfLevel);
         int NotImpl4();
         int NotImpl5();
         [PreserveSig]
-        int SetMute([MarshalAs(UnmanagedType.Bool)] bool bMute, ref Guid pguidEventContext);
+        int GetMasterVolumeLevelScalar(out float pfLevel);
+        int NotImpl7();
+        int NotImpl8();
+        int NotImpl9();
         [PreserveSig]
         int GetMute([MarshalAs(UnmanagedType.Bool)] out bool pbMute);
-    }
-
-    [Guid("657804FA-D6AD-4496-8A60-352752D5004F"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
-    private interface IAudioEndpointVolumeCallback
-    {
-        [PreserveSig]
-        int OnNotify(IntPtr pNotify);
-    }
-
-    [StructLayout(LayoutKind.Sequential)]
-    private struct AUDIO_VOLUME_NOTIFICATION_DATA
-    {
-        public Guid guidEventContext;
-        [MarshalAs(UnmanagedType.Bool)]
-        public bool bMuted;
-        public float fMasterVolume;
-        public uint nChannels;
-        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 1)]
-        public float[] afChannelVolumes;
-    }
-
-    private class AudioEndpointVolumeCallback : IAudioEndpointVolumeCallback
-    {
-        private readonly VolumeService _parent;
-
-        public AudioEndpointVolumeCallback(VolumeService parent)
-        {
-            _parent = parent;
-        }
-
-        public int OnNotify(IntPtr pNotify)
-        {
-            try
-            {
-                if (pNotify == IntPtr.Zero) return 0;
-                var data = Marshal.PtrToStructure<AUDIO_VOLUME_NOTIFICATION_DATA>(pNotify);
-                _parent.NotifyVolumeChanged(data.fMasterVolume, data.bMuted);
-            }
-            catch { }
-            return 0;
-        }
     }
 }
