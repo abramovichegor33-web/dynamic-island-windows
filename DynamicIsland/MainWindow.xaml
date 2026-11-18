@@ -23,7 +23,7 @@
   </Window.ContextMenu>
 
   <!-- Root Container -->
-  <Grid x:Name="RootGrid" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="6">
+  <Grid x:Name="RootGrid" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="4">
     
     <!-- Aura Glow (Conditional) -->
     <Border x:Name="AuraGlow" CornerRadius="{DynamicResource IslandCornerRadius}"

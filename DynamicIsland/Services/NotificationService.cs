@@ -23,26 +23,27 @@ public class NotificationService
 
     private NotificationService()
     {
-        _ = InitializeAsync();
+        _ = Task.Run(InitializeAsync);
     }
 
     private async Task InitializeAsync()
     {
         try
         {
-            if (UserNotificationListener.Current != null)
+            var listener = UserNotificationListener.Current;
+            if (listener != null)
             {
-                _listener = UserNotificationListener.Current;
-                var access = await _listener.RequestAccessAsync();
+                var access = await listener.RequestAccessAsync();
                 if (access == UserNotificationListenerAccessStatus.Allowed)
                 {
-                    _listener.NotificationChanged += Listener_NotificationChanged;
+                    listener.NotificationChanged += Listener_NotificationChanged;
+                    _listener = listener;
                 }
             }
         }
         catch
         {
-            // Windows Notification listener might be disabled in group policy
+            // Ignore in unpackaged desktop mode
         }
     }
 

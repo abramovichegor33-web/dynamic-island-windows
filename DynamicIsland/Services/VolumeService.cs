@@ -12,6 +12,11 @@ public class VolumeService
 
     public event Action<float, bool>? VolumeChanged;
 
+    // Pin references to prevent GC collection while unmanaged COM callbacks are active
+    private IMMDevice? _device;
+    private IAudioEndpointVolume? _endpoint;
+    private AudioEndpointVolumeCallback? _callback;
+
     private VolumeService()
     {
         _ = Task.Run(InitCoreAudio);
@@ -22,20 +27,20 @@ public class VolumeService
         try
         {
             var enumerator = (IMMDeviceEnumerator)new MMDeviceEnumerator();
-            enumerator.GetDefaultAudioEndpoint(0 /* eRender */, 1 /* eMultimedia */, out var device);
-            if (device != null)
+            enumerator.GetDefaultAudioEndpoint(0 /* eRender */, 1 /* eMultimedia */, out _device);
+            if (_device != null)
             {
                 var iid = typeof(IAudioEndpointVolume).GUID;
-                device.Activate(ref iid, 1 /* CLSCTX_INPROC_SERVER */, IntPtr.Zero, out var audioEndpointObj);
-                var endpoint = (IAudioEndpointVolume)audioEndpointObj;
+                _device.Activate(ref iid, 1 /* CLSCTX_INPROC_SERVER */, IntPtr.Zero, out var audioEndpointObj);
+                _endpoint = (IAudioEndpointVolume)audioEndpointObj;
 
-                endpoint.GetMasterVolumeLevelScalar(out float vol);
-                endpoint.GetMute(out bool mute);
+                _endpoint.GetMasterVolumeLevelScalar(out float vol);
+                _endpoint.GetMute(out bool mute);
                 CurrentVolume = vol;
                 IsMuted = mute;
 
-                var callback = new AudioEndpointVolumeCallback(this);
-                endpoint.RegisterControlChangeNotify(callback);
+                _callback = new AudioEndpointVolumeCallback(this);
+                _endpoint.RegisterControlChangeNotify(_callback);
             }
         }
         catch
@@ -103,6 +108,7 @@ public class VolumeService
     private struct AUDIO_VOLUME_NOTIFICATION_DATA
     {
         public Guid guidEventContext;
+        [MarshalAs(UnmanagedType.Bool)]
         public bool bMuted;
         public float fMasterVolume;
         public uint nChannels;
@@ -123,6 +129,7 @@ public class VolumeService
         {
             try
             {
+                if (pNotify == IntPtr.Zero) return 0;
                 var data = Marshal.PtrToStructure<AUDIO_VOLUME_NOTIFICATION_DATA>(pNotify);
                 _parent.NotifyVolumeChanged(data.fMasterVolume, data.bMuted);
             }

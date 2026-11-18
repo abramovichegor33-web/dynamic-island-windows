@@ -37,7 +37,7 @@ public partial class App : Application
 
         if (!isNewInstance)
         {
-            MessageBox.Show("Dynamic Island уже запущен!", "Dynamic Island", MessageBoxButton.OK, MessageBoxImage.Information);
+            // Another instance is already running, exit cleanly
             Shutdown();
             return;
         }
