@@ -1,0 +1,41 @@
+<UserControl x:Class="DynamicIsland.Widgets.VolumeWidget"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Foreground="{DynamicResource TextPrimaryBrush}">
+  <Grid>
+    <!-- Compact View -->
+    <Grid x:Name="CompactContainer" Height="36" VerticalAlignment="Center" Margin="8,0">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="Auto" />
+        <ColumnDefinition Width="*" />
+        <ColumnDefinition Width="Auto" />
+      </Grid.ColumnDefinitions>
+
+      <TextBlock x:Name="IconSpeaker" Text="🔊" FontSize="13" Margin="0,0,8,0" VerticalAlignment="Center" />
+
+      <ProgressBar x:Name="VolBar" Grid.Column="1" Height="6" Maximum="100" Value="50"
+                   Foreground="{DynamicResource AccentBrush}" Background="#2AFFFFFF" BorderThickness="0">
+        <ProgressBar.Resources>
+          <Style TargetType="Border">
+            <Setter Property="CornerRadius" Value="3" />
+          </Style>
+        </ProgressBar.Resources>
+      </ProgressBar>
+
+      <TextBlock x:Name="TextPercent" Grid.Column="2" Text="50%" FontSize="11" FontWeight="SemiBold" Margin="8,0,0,0" VerticalAlignment="Center" />
+    </Grid>
+
+    <!-- Expanded View -->
+    <Grid x:Name="ExpandedContainer" Visibility="Collapsed" Margin="20,16">
+      <StackPanel VerticalAlignment="Center">
+        <Grid Margin="0,0,0,12">
+          <TextBlock x:Name="ExpIcon" Text="🔊 Громкость системы" FontSize="14" FontWeight="SemiBold" HorizontalAlignment="Left" />
+          <TextBlock x:Name="ExpPercent" Text="50%" FontSize="14" FontWeight="Bold" Foreground="{DynamicResource AccentBrush}" HorizontalAlignment="Right" />
+        </Grid>
+
+        <Slider x:Name="ExpSlider" Height="24" Maximum="100" Value="50" IsMoveToPointEnabled="True"
+                ValueChanged="ExpSlider_ValueChanged" />
+      </StackPanel>
+    </Grid>
+  </Grid>
+</UserControl>
