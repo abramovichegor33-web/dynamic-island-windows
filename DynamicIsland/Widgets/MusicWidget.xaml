@@ -3,78 +3,134 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              Foreground="{DynamicResource TextPrimaryBrush}">
   <Grid>
-    <!-- Compact View -->
-    <Grid x:Name="CompactContainer" Height="36" VerticalAlignment="Center">
+    <!-- Compact View (Height = 36) -->
+    <Grid x:Name="CompactContainer" Height="36" VerticalAlignment="Center" Margin="6,0,8,0">
       <Grid.ColumnDefinitions>
         <ColumnDefinition Width="Auto" />
         <ColumnDefinition Width="*" />
         <ColumnDefinition Width="Auto" />
       </Grid.ColumnDefinitions>
 
-      <!-- Mini Album Art / Music Icon -->
-      <Border Width="22" Height="22" CornerRadius="11" Margin="6,0,8,0" Background="#22FFFFFF" ClipToBounds="True">
+      <!-- Mini Album Art -->
+      <Border Width="24" Height="24" CornerRadius="6" Background="#262626" ClipToBounds="True" Margin="2,0,8,0">
         <Image x:Name="CompactArt" Stretch="UniformToFill" />
       </Border>
 
       <!-- Track and Artist -->
-      <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="0,0,6,0">
-        <TextBlock x:Name="CompactTitle" Text="Нет трека" FontSize="11" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
-        <TextBlock x:Name="CompactArtist" Text="" FontSize="9.5" Foreground="{DynamicResource TextSecondaryBrush}" TextTrimming="CharacterEllipsis" />
+      <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="0,0,8,0">
+        <TextBlock x:Name="CompactTitle" Text="Нет трека" FontSize="11.5" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+        <TextBlock x:Name="CompactArtist" Text="Включите музыку" FontSize="9.5" Foreground="{DynamicResource TextSecondaryBrush}" TextTrimming="CharacterEllipsis" />
       </StackPanel>
 
-      <!-- Mini Play State Indicator -->
-      <TextBlock x:Name="CompactPlayingIndicator" Grid.Column="2" Text="▶" FontSize="10" Foreground="{DynamicResource AccentBrush}" Margin="0,0,8,0" VerticalAlignment="Center" />
+      <!-- Animated Visualizer Bars (Compact) -->
+      <StackPanel x:Name="CompactVisualizer" Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,4,0">
+        <Border x:Name="Bar1" Width="2.5" Height="10" Background="{DynamicResource AccentBrush}" CornerRadius="1.2" Margin="1,0" />
+        <Border x:Name="Bar2" Width="2.5" Height="14" Background="{DynamicResource AccentBrush}" CornerRadius="1.2" Margin="1,0" />
+        <Border x:Name="Bar3" Width="2.5" Height="7" Background="{DynamicResource AccentBrush}" CornerRadius="1.2" Margin="1,0" />
+        <Border x:Name="Bar4" Width="2.5" Height="12" Background="{DynamicResource AccentBrush}" CornerRadius="1.2" Margin="1,0" />
+      </StackPanel>
     </Grid>
 
     <!-- Expanded View -->
-    <Grid x:Name="ExpandedContainer" Visibility="Collapsed" Margin="16,12,16,12">
+    <Grid x:Name="ExpandedContainer" Visibility="Collapsed" Margin="16,8,16,12">
       <Grid.RowDefinitions>
-        <RowDefinition Height="*" />
+        <RowDefinition Height="Auto" />
         <RowDefinition Height="Auto" />
         <RowDefinition Height="Auto" />
       </Grid.RowDefinitions>
 
-      <!-- Main Info Row -->
-      <Grid Grid.Row="0">
+      <!-- Row 0: Album Art + Titles + Waveform Visualizer -->
+      <Grid Grid.Row="0" Margin="0,0,0,10">
         <Grid.ColumnDefinitions>
           <ColumnDefinition Width="Auto" />
           <ColumnDefinition Width="*" />
+          <ColumnDefinition Width="Auto" />
         </Grid.ColumnDefinitions>
 
-        <!-- Large Album Art -->
-        <Border Width="64" Height="64" CornerRadius="12" Background="#2A2A2A" ClipToBounds="True" Margin="0,0,14,0">
+        <!-- Big Album Art with soft shadow -->
+        <Border Width="64" Height="64" CornerRadius="12" Background="#1E2024" ClipToBounds="True" Margin="0,0,14,0"
+                BorderBrush="#25FFFFFF" BorderThickness="1">
+          <Border.Effect>
+            <DropShadowEffect BlurRadius="12" ShadowDepth="2" Opacity="0.35" Color="Black" />
+          </Border.Effect>
           <Image x:Name="ExpandedArt" Stretch="UniformToFill" />
         </Border>
 
         <!-- Titles -->
-        <StackPanel Grid.Column="1" VerticalAlignment="Center">
-          <TextBlock x:Name="ExpandedTitle" Text="Ничего не играет" FontSize="14" FontWeight="Bold" TextTrimming="CharacterEllipsis" />
-          <TextBlock x:Name="ExpandedArtist" Text="Включите музыку в плеере или браузере" FontSize="12" Margin="0,3,0,0" Foreground="{DynamicResource TextSecondaryBrush}" TextTrimming="CharacterEllipsis" />
+        <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="0,0,10,0">
+          <TextBlock x:Name="ExpandedTitle" Text="Ничего не воспроизводится" FontSize="15" FontWeight="Bold"
+                     TextTrimming="CharacterEllipsis" Foreground="{DynamicResource TextPrimaryBrush}" />
+          <TextBlock x:Name="ExpandedArtist" Text="Запустите Spotify, Яндекс или браузер" FontSize="12.5"
+                     Foreground="{DynamicResource TextSecondaryBrush}" TextTrimming="CharacterEllipsis" Margin="0,3,0,0" />
+        </StackPanel>
+
+        <!-- Live Waveform Visualizer Bars (Expanded) -->
+        <StackPanel x:Name="ExpVisualizer" Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+          <Border x:Name="ExpBar1" Width="3" Height="14" Background="{DynamicResource AccentBrush}" CornerRadius="1.5" Margin="1.5,0" />
+          <Border x:Name="ExpBar2" Width="3" Height="22" Background="{DynamicResource AccentBrush}" CornerRadius="1.5" Margin="1.5,0" />
+          <Border x:Name="ExpBar3" Width="3" Height="10" Background="{DynamicResource AccentBrush}" CornerRadius="1.5" Margin="1.5,0" />
+          <Border x:Name="ExpBar4" Width="3" Height="18" Background="{DynamicResource AccentBrush}" CornerRadius="1.5" Margin="1.5,0" />
+          <Border x:Name="ExpBar5" Width="3" Height="12" Background="{DynamicResource AccentBrush}" CornerRadius="1.5" Margin="1.5,0" />
         </StackPanel>
       </Grid>
 
-      <!-- Progress Bar -->
-      <ProgressBar x:Name="PlaybackProgress" Grid.Row="1" Height="4" Margin="0,14,0,8" Value="0" Maximum="100"
-                   Foreground="{DynamicResource AccentBrush}" Background="#33FFFFFF" BorderThickness="0" />
+      <!-- Row 1: Scrubbing / Progress Bar with timestamps -->
+      <Grid Grid.Row="1" Margin="0,2,0,10">
+        <Grid.RowDefinitions>
+          <RowDefinition Height="Auto" />
+          <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
 
-      <!-- Controls Row -->
-      <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,4,0,0">
-        <Button x:Name="BtnPrev" Content="⏮" Width="36" Height="36" FontSize="14" Margin="10,0"
-                Background="Transparent" BorderThickness="0" Foreground="{DynamicResource TextPrimaryBrush}"
-                Cursor="Hand" Click="BtnPrev_Click" />
-        <Button x:Name="BtnPlayPause" Content="⏯" Width="44" Height="44" FontSize="18" Margin="10,0"
-                Background="{DynamicResource AccentBrush}" BorderThickness="0" Foreground="Black"
-                Cursor="Hand" Click="BtnPlayPause_Click">
-          <Button.Resources>
+        <ProgressBar x:Name="PlaybackProgress" Height="4" Maximum="100" Value="0"
+                     Foreground="{DynamicResource AccentBrush}" Background="#2AFFFFFF" BorderThickness="0">
+          <ProgressBar.Resources>
             <Style TargetType="Border">
-              <Setter Property="CornerRadius" Value="22" />
+              <Setter Property="CornerRadius" Value="2" />
             </Style>
-          </Button.Resources>
-        </Button>
-        <Button x:Name="BtnNext" Content="⏭" Width="36" Height="36" FontSize="14" Margin="10,0"
-                Background="Transparent" BorderThickness="0" Foreground="{DynamicResource TextPrimaryBrush}"
-                Cursor="Hand" Click="BtnNext_Click" />
-      </StackPanel>
+          </ProgressBar.Resources>
+        </ProgressBar>
+
+        <Grid Grid.Row="1" Margin="0,4,0,0">
+          <TextBlock x:Name="TextElapsed" Text="0:00" FontSize="10" Foreground="{DynamicResource TextSecondaryBrush}" HorizontalAlignment="Left" />
+          <TextBlock x:Name="TextTotal" Text="0:00" FontSize="10" Foreground="{DynamicResource TextSecondaryBrush}" HorizontalAlignment="Right" />
+        </Grid>
+      </Grid>
+
+      <!-- Row 2: Playback Controls Row -->
+      <Grid Grid.Row="2">
+        <!-- Controls centered -->
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+          <!-- Previous Button -->
+          <Button x:Name="BtnPrev" Width="38" Height="38" Background="#18FFFFFF" BorderThickness="0"
+                  Foreground="{DynamicResource TextPrimaryBrush}" FontSize="15" Cursor="Hand" Margin="8,0"
+                  Click="BtnPrev_Click">
+            <Button.Resources>
+              <Style TargetType="Border"><Setter Property="CornerRadius" Value="19" /></Style>
+            </Button.Resources>
+            <TextBlock Text="⏮" Margin="0,-2,0,0" HorizontalAlignment="Center" VerticalAlignment="Center" />
+          </Button>
+
+          <!-- Play/Pause Button (Prominent) -->
+          <Button x:Name="BtnPlayPause" Width="46" Height="46" Background="{DynamicResource AccentBrush}"
+                  BorderThickness="0" Foreground="Black" FontSize="18" Cursor="Hand" Margin="8,0"
+                  Click="BtnPlayPause_Click">
+            <Button.Resources>
+              <Style TargetType="Border"><Setter Property="CornerRadius" Value="23" /></Style>
+            </Button.Resources>
+            <TextBlock x:Name="IconPlayPause" Text="▶" Margin="2,-1,0,0" HorizontalAlignment="Center" VerticalAlignment="Center" />
+          </Button>
+
+          <!-- Next Button -->
+          <Button x:Name="BtnNext" Width="38" Height="38" Background="#18FFFFFF" BorderThickness="0"
+                  Foreground="{DynamicResource TextPrimaryBrush}" FontSize="15" Cursor="Hand" Margin="8,0"
+                  Click="BtnNext_Click">
+            <Button.Resources>
+              <Style TargetType="Border"><Setter Property="CornerRadius" Value="19" /></Style>
+            </Button.Resources>
+            <TextBlock Text="⏭" Margin="0,-2,0,0" HorizontalAlignment="Center" VerticalAlignment="Center" />
+          </Button>
+        </StackPanel>
+      </Grid>
     </Grid>
   </Grid>
 </UserControl>

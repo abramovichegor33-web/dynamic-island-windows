@@ -7,10 +7,10 @@ using DynamicIsland.Services;
 
 namespace DynamicIsland.Widgets;
 
-public class ShelfItem
+public class ShelfFileItem
 {
-    public string Name { get; set; } = "";
     public string Path { get; set; } = "";
+    public string Name => System.IO.Path.GetFileName(Path);
 }
 
 public partial class FileShelfWidget : UserControl, IIslandWidget
@@ -20,85 +20,80 @@ public partial class FileShelfWidget : UserControl, IIslandWidget
     public string Icon => "📁";
     public bool IsEnabled => ConfigService.Instance.Config.EnableShelfWidget;
 
-    public FrameworkElement CompactView => CompactContainer;
-    public FrameworkElement ExpandedView => ExpandedContainer;
-
-    private readonly ObservableCollection<ShelfItem> _items = [];
+    public ObservableCollection<ShelfFileItem> Files { get; } = [];
 
     public FileShelfWidget()
     {
         InitializeComponent();
-        ListFiles.ItemsSource = _items;
-
-        var saved = ConfigService.Instance.Config.PinnedFiles;
-        foreach (var p in saved.Where(File.Exists))
-        {
-            _items.Add(new ShelfItem { Name = Path.GetFileName(p), Path = p });
-        }
-        UpdateState();
+        ListFiles.ItemsSource = Files;
+        UpdateEmptyState();
     }
 
-    public void AddFiles(string[] paths)
+    public void SetExpanded(bool isExpanded)
     {
-        foreach (var p in paths)
+        CompactContainer.Visibility = isExpanded ? Visibility.Collapsed : Visibility.Visible;
+        ExpandedContainer.Visibility = isExpanded ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    public void AddFiles(IEnumerable<string> filePaths)
+    {
+        foreach (var p in filePaths)
         {
-            if (!_items.Any(i => i.Path.Equals(p, StringComparison.OrdinalIgnoreCase)))
+            if (File.Exists(p) || Directory.Exists(p))
             {
-                _items.Add(new ShelfItem { Name = Path.GetFileName(p), Path = p });
+                if (!Files.Any(f => f.Path.Equals(p, StringComparison.OrdinalIgnoreCase)))
+                {
+                    Files.Add(new ShelfFileItem { Path = p });
+                }
             }
         }
-        SyncConfig();
-        UpdateState();
+        UpdateEmptyState();
     }
 
-    private void UpdateState()
+    private void UpdateEmptyState()
     {
-        int count = _items.Count;
-        TextCompactCount.Text = count == 0 ? "Полка пуста" : $"{count} файл{(count == 1 ? "" : "а")}";
+        int count = Files.Count;
+        TextCompactCount.Text = count == 0 ? "Полка пуста" : $"{count} {PluralFiles(count)}";
         TextPlaceholder.Visibility = count == 0 ? Visibility.Visible : Visibility.Collapsed;
-        ListFiles.Visibility = count == 0 ? Visibility.Collapsed : Visibility.Visible;
+        ListFiles.Visibility = count > 0 ? Visibility.Visible : Visibility.Collapsed;
     }
 
-    private void SyncConfig()
+    private static string PluralFiles(int n)
     {
-        var cfg = ConfigService.Instance.Config;
-        cfg.PinnedFiles = _items.Select(i => i.Path).ToList();
-        ConfigService.Instance.Save();
+        if (n % 10 == 1 && n % 100 != 11) return "файл";
+        if (n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20)) return "файла";
+        return "файлов";
     }
 
     private void BtnClearAll_Click(object sender, RoutedEventArgs e)
     {
-        _items.Clear();
-        SyncConfig();
-        UpdateState();
+        Files.Clear();
+        UpdateEmptyState();
     }
 
     private void BtnCopyFile_Click(object sender, RoutedEventArgs e)
     {
         if (sender is Button btn && btn.Tag is string path && File.Exists(path))
         {
-            var collection = new System.Collections.Specialized.StringCollection { path };
-            Clipboard.SetFileDropList(collection);
+            var coll = new System.Collections.Specialized.StringCollection { path };
+            Clipboard.SetFileDropList(coll);
         }
     }
 
     private void BtnOpenFile_Click(object sender, RoutedEventArgs e)
     {
-        if (sender is Button btn && btn.Tag is string path && File.Exists(path))
+        if (sender is Button btn && btn.Tag is string path)
         {
-            Process.Start("explorer.exe", $"/select,\"{path}\"");
+            try
+            {
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName = "explorer.exe",
+                    Arguments = $"/select,\"{path}\"",
+                    UseShellExecute = true
+                });
+            }
+            catch { }
         }
-    }
-
-    public void OnActivated()
-    {
-        CompactContainer.Visibility = Visibility.Collapsed;
-        ExpandedContainer.Visibility = Visibility.Visible;
-    }
-
-    public void OnDeactivated()
-    {
-        ExpandedContainer.Visibility = Visibility.Collapsed;
-        CompactContainer.Visibility = Visibility.Visible;
     }
 }

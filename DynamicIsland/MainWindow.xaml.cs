@@ -2,6 +2,7 @@ using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Threading;
 using DynamicIsland.Models;
@@ -81,7 +82,7 @@ public partial class MainWindow : Window
         }
         catch (Exception ex)
         {
-            try { System.IO.File.AppendAllText("crash.log", $"[{DateTime.Now}] Loaded Exception: {ex}\n"); } catch { }
+            try { File.AppendAllText("crash.log", $"[{DateTime.Now}] Loaded Exception: {ex}\n"); } catch { }
         }
     }
 
@@ -115,32 +116,70 @@ public partial class MainWindow : Window
         {
             var btn = new Button
             {
-                Content = widget.Icon,
+                Content = new TextBlock
+                {
+                    Text = widget.Icon,
+                    FontSize = 13,
+                    HorizontalAlignment = HorizontalAlignment.Center,
+                    VerticalAlignment = VerticalAlignment.Center
+                },
                 ToolTip = widget.DisplayName,
-                Width = 26,
-                Height = 24,
-                FontSize = 12,
+                Height = 26,
+                Padding = new Thickness(7, 0, 7, 0),
                 Margin = new Thickness(2, 0, 2, 0),
-                Background = System.Windows.Media.Brushes.Transparent,
+                Background = Brushes.Transparent,
                 BorderThickness = new Thickness(0),
-                Foreground = (System.Windows.Media.Brush?)TryFindResource("TextPrimaryBrush") ?? System.Windows.Media.Brushes.White,
+                Foreground = (Brush?)TryFindResource("TextSecondaryBrush") ?? Brushes.Gray,
                 Cursor = Cursors.Hand,
                 Tag = widget
             };
+
+            btn.Resources.Add(typeof(Border), new Style(typeof(Border))
+            {
+                Setters = { new Setter(Border.CornerRadiusProperty, new CornerRadius(13)) }
+            });
+
             btn.Click += (s, _) =>
             {
                 if (s is Button b && b.Tag is IIslandWidget w) SelectWidget(w);
             };
+
             TabsPanel.Children.Add(btn);
+        }
+
+        UpdateTabSelection();
+    }
+
+    private void UpdateTabSelection()
+    {
+        var accentBrush = (Brush?)TryFindResource("AccentBrush") ?? Brushes.LimeGreen;
+        var textPrimaryBrush = (Brush?)TryFindResource("TextPrimaryBrush") ?? Brushes.White;
+        var textSecondaryBrush = (Brush?)TryFindResource("TextSecondaryBrush") ?? Brushes.Gray;
+        var activeBgBrush = new SolidColorBrush(Color.FromArgb(0x40, 0xFF, 0xFF, 0xFF));
+
+        foreach (var child in TabsPanel.Children)
+        {
+            if (child is Button btn && btn.Tag is IIslandWidget widget)
+            {
+                bool isSelected = widget == _activeWidget;
+                btn.Background = isSelected ? activeBgBrush : Brushes.Transparent;
+                btn.Foreground = isSelected ? textPrimaryBrush : textSecondaryBrush;
+            }
         }
     }
 
     private void SelectWidget(IIslandWidget widget)
     {
-        if (_activeWidget != null) _activeWidget.OnDeactivated();
+        if (_activeWidget != null)
+        {
+            _activeWidget.SetExpanded(false);
+        }
+
         _activeWidget = widget;
-        WidgetHost.Content = _isExpanded ? widget.ExpandedView : widget.CompactView;
-        if (_isExpanded) _activeWidget.OnActivated();
+        WidgetHost.Content = (FrameworkElement)widget;
+        _activeWidget.SetExpanded(_isExpanded);
+
+        UpdateTabSelection();
     }
 
     private void ApplyConfig()
@@ -148,6 +187,12 @@ public partial class MainWindow : Window
         var cfg = ConfigService.Instance.Config;
         _hoverTimer.Interval = TimeSpan.FromMilliseconds(cfg.HoverDelayMs);
         PillShadow.Opacity = cfg.ShowShadow ? 0.45 : 0;
+
+        if (!_isExpanded)
+        {
+            Width = cfg.CompactWidth * (cfg.ScalePercent / 100.0);
+            Height = cfg.CompactHeight * (cfg.ScalePercent / 100.0);
+        }
 
         RebuildTabs();
         ApplyBlurStyle(ThemeService.Instance.CurrentTheme);
@@ -157,6 +202,7 @@ public partial class MainWindow : Window
     private void OnThemeChanged(IslandTheme theme)
     {
         ApplyBlurStyle(theme);
+        UpdateTabSelection();
     }
 
     private void ApplyBlurStyle(IslandTheme theme)
@@ -199,11 +245,8 @@ public partial class MainWindow : Window
         double targetH = cfg.ExpandedHeight * (cfg.ScalePercent / 100.0);
 
         HeaderTabs.Visibility = Visibility.Visible;
-        if (_activeWidget != null)
-        {
-            WidgetHost.Content = _activeWidget.ExpandedView;
-            _activeWidget.OnActivated();
-        }
+        _activeWidget?.SetExpanded(true);
+        UpdateTabSelection();
 
         AnimateMorph(targetW, targetH);
     }
@@ -218,11 +261,7 @@ public partial class MainWindow : Window
         double targetH = cfg.CompactHeight * (cfg.ScalePercent / 100.0);
 
         HeaderTabs.Visibility = Visibility.Collapsed;
-        if (_activeWidget != null)
-        {
-            _activeWidget.OnDeactivated();
-            WidgetHost.Content = _activeWidget.CompactView;
-        }
+        _activeWidget?.SetExpanded(false);
 
         AnimateMorph(targetW, targetH);
     }
@@ -262,7 +301,7 @@ public partial class MainWindow : Window
         if (_isExpanded)
         {
             _autoCollapseTimer.Stop();
-            _autoCollapseTimer.Interval = TimeSpan.FromMilliseconds(400);
+            _autoCollapseTimer.Interval = TimeSpan.FromMilliseconds(500);
             _autoCollapseTimer.Start();
         }
     }

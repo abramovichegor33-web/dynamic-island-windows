@@ -8,11 +8,8 @@ public partial class WeatherWidget : UserControl, IIslandWidget
 {
     public string WidgetId => "weather";
     public string DisplayName => "Погода";
-    public string Icon => "🌤️";
+    public string Icon => "⛅";
     public bool IsEnabled => ConfigService.Instance.Config.EnableWeatherWidget;
-
-    public FrameworkElement CompactView => CompactContainer;
-    public FrameworkElement ExpandedView => ExpandedContainer;
 
     public WeatherWidget()
     {
@@ -29,18 +26,24 @@ public partial class WeatherWidget : UserControl, IIslandWidget
         }
     }
 
+    public void SetExpanded(bool isExpanded)
+    {
+        CompactContainer.Visibility = isExpanded ? Visibility.Collapsed : Visibility.Visible;
+        ExpandedContainer.Visibility = isExpanded ? Visibility.Visible : Visibility.Collapsed;
+    }
+
     private void UpdateUi(WeatherData data)
     {
         string sign = data.Temperature > 0 ? "+" : "";
-        string tempStr = $"{sign}{data.Temperature:0}°";
+        string tempStr = $"{sign}{data.Temperature:0}°C";
 
         IconCompact.Text = data.Icon;
-        TextCompactTemp.Text = $"{tempStr}C";
+        TextCompactTemp.Text = tempStr;
 
         IconExpanded.Text = data.Icon;
-        TextExpTemp.Text = tempStr;
-        TextCity.Text = ConfigService.Instance.Config.WeatherCity;
+        TextExpTemp.Text = $"{sign}{data.Temperature:0}°";
         TextDesc.Text = data.Description;
+        TextCity.Text = ConfigService.Instance.Config.WeatherCity;
     }
 
     private async void BtnRefresh_Click(object sender, RoutedEventArgs e)
@@ -48,17 +51,5 @@ public partial class WeatherWidget : UserControl, IIslandWidget
         BtnRefresh.IsEnabled = false;
         await WeatherService.Instance.RefreshWeatherAsync(force: true);
         BtnRefresh.IsEnabled = true;
-    }
-
-    public void OnActivated()
-    {
-        CompactContainer.Visibility = Visibility.Collapsed;
-        ExpandedContainer.Visibility = Visibility.Visible;
-    }
-
-    public void OnDeactivated()
-    {
-        ExpandedContainer.Visibility = Visibility.Collapsed;
-        CompactContainer.Visibility = Visibility.Visible;
     }
 }

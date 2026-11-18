@@ -9,9 +9,5 @@ public interface IIslandWidget
     string Icon { get; }
     bool IsEnabled { get; }
 
-    FrameworkElement CompactView { get; }
-    FrameworkElement ExpandedView { get; }
-
-    void OnActivated();
-    void OnDeactivated();
+    void SetExpanded(bool isExpanded);
 }

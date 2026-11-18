@@ -11,9 +11,6 @@ public partial class VolumeWidget : UserControl, IIslandWidget
     public string Icon => "🔊";
     public bool IsEnabled => ConfigService.Instance.Config.EnableVolumeWidget;
 
-    public FrameworkElement CompactView => CompactContainer;
-    public FrameworkElement ExpandedView => ExpandedContainer;
-
     private bool _isUpdatingUi;
 
     public VolumeWidget()
@@ -28,6 +25,12 @@ public partial class VolumeWidget : UserControl, IIslandWidget
         UpdateUi(VolumeService.Instance.CurrentVolume, VolumeService.Instance.IsMuted);
     }
 
+    public void SetExpanded(bool isExpanded)
+    {
+        CompactContainer.Visibility = isExpanded ? Visibility.Collapsed : Visibility.Visible;
+        ExpandedContainer.Visibility = isExpanded ? Visibility.Visible : Visibility.Collapsed;
+    }
+
     private void UpdateUi(float vol, bool muted)
     {
         _isUpdatingUi = true;
@@ -40,7 +43,8 @@ public partial class VolumeWidget : UserControl, IIslandWidget
             TextPercent.Text = muted ? "Mute" : $"{percent}%";
             VolBar.Value = muted ? 0 : percent;
 
-            ExpIcon.Text = $"{icon} Громкость системы";
+            ExpIcon.Text = icon;
+            TextMuteStatus.Text = muted ? "Звук отключен" : "Вывод звука активен";
             ExpPercent.Text = muted ? "Без звука" : $"{percent}%";
             ExpSlider.Value = percent;
         }
@@ -50,23 +54,24 @@ public partial class VolumeWidget : UserControl, IIslandWidget
         }
     }
 
-    public void OnActivated()
-    {
-        CompactContainer.Visibility = Visibility.Collapsed;
-        ExpandedContainer.Visibility = Visibility.Visible;
-    }
-
-    public void OnDeactivated()
-    {
-        ExpandedContainer.Visibility = Visibility.Collapsed;
-        CompactContainer.Visibility = Visibility.Visible;
-    }
-
     private void ExpSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
     {
         if (!_isUpdatingUi && IsLoaded)
         {
             VolumeService.Instance.SetVolume((float)(e.NewValue / 100.0));
+        }
+    }
+
+    private void BtnMute_Click(object sender, RoutedEventArgs e)
+    {
+        VolumeService.Instance.ToggleMute();
+    }
+
+    private void Preset_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is Button btn && btn.Tag is string tagStr && int.TryParse(tagStr, out int val))
+        {
+            VolumeService.Instance.SetVolume(val / 100f);
         }
     }
 }

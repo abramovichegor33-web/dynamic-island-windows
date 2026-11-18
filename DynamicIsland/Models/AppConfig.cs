@@ -23,10 +23,10 @@ public class AppConfig
     };
 
     // Dimensions
-    public double CompactWidth { get; set; } = 190;
-    public double CompactHeight { get; set; } = 36;
+    public double CompactWidth { get; set; } = 210;
+    public double CompactHeight { get; set; } = 38;
     public double ExpandedWidth { get; set; } = 460;
-    public double ExpandedHeight { get; set; } = 190;
+    public double ExpandedHeight { get; set; } = 185;
     public double TopOffset { get; set; } = 10;
     public double ScalePercent { get; set; } = 100; // 80 - 150 %
 

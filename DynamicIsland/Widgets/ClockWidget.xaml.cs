@@ -14,9 +14,6 @@ public partial class ClockWidget : UserControl, IIslandWidget
     public string Icon => "⏱️";
     public bool IsEnabled => ConfigService.Instance.Config.EnableClockWidget;
 
-    public FrameworkElement CompactView => CompactContainer;
-    public FrameworkElement ExpandedView => ExpandedContainer;
-
     private readonly DispatcherTimer _clockTimer;
     private readonly DispatcherTimer _swTimer;
     private readonly Stopwatch _stopwatch = new();
@@ -37,6 +34,12 @@ public partial class ClockWidget : UserControl, IIslandWidget
         };
 
         UpdateClock();
+    }
+
+    public void SetExpanded(bool isExpanded)
+    {
+        CompactContainer.Visibility = isExpanded ? Visibility.Collapsed : Visibility.Visible;
+        ExpandedContainer.Visibility = isExpanded ? Visibility.Visible : Visibility.Collapsed;
     }
 
     private void UpdateClock()
@@ -73,17 +76,5 @@ public partial class ClockWidget : UserControl, IIslandWidget
         _swTimer.Stop();
         TextStopwatch.Text = "00:00.0";
         BtnSwStartPause.Content = "Старт";
-    }
-
-    public void OnActivated()
-    {
-        CompactContainer.Visibility = Visibility.Collapsed;
-        ExpandedContainer.Visibility = Visibility.Visible;
-    }
-
-    public void OnDeactivated()
-    {
-        ExpandedContainer.Visibility = Visibility.Collapsed;
-        CompactContainer.Visibility = Visibility.Visible;
     }
 }

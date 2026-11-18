@@ -11,9 +11,6 @@ public partial class NotificationWidget : UserControl, IIslandWidget
     public string Icon => "🔔";
     public bool IsEnabled => ConfigService.Instance.Config.EnableNotificationWidget;
 
-    public FrameworkElement CompactView => CompactContainer;
-    public FrameworkElement ExpandedView => ExpandedContainer;
-
     public NotificationWidget()
     {
         InitializeComponent();
@@ -22,6 +19,12 @@ public partial class NotificationWidget : UserControl, IIslandWidget
         {
             Dispatcher.Invoke(() => ShowNotification(notif));
         };
+    }
+
+    public void SetExpanded(bool isExpanded)
+    {
+        CompactContainer.Visibility = isExpanded ? Visibility.Collapsed : Visibility.Visible;
+        ExpandedContainer.Visibility = isExpanded ? Visibility.Visible : Visibility.Collapsed;
     }
 
     public void ShowNotification(IslandNotification notif)
@@ -34,17 +37,5 @@ public partial class NotificationWidget : UserControl, IIslandWidget
         ExpTime.Text = notif.Timestamp.ToString("HH:mm");
         ExpTitle.Text = notif.Title;
         ExpBody.Text = notif.Body;
-    }
-
-    public void OnActivated()
-    {
-        CompactContainer.Visibility = Visibility.Collapsed;
-        ExpandedContainer.Visibility = Visibility.Visible;
-    }
-
-    public void OnDeactivated()
-    {
-        ExpandedContainer.Visibility = Visibility.Collapsed;
-        CompactContainer.Visibility = Visibility.Visible;
     }
 }

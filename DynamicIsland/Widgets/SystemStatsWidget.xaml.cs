@@ -11,9 +11,6 @@ public partial class SystemStatsWidget : UserControl, IIslandWidget
     public string Icon => "⚡";
     public bool IsEnabled => ConfigService.Instance.Config.EnableStatsWidget;
 
-    public FrameworkElement CompactView => CompactContainer;
-    public FrameworkElement ExpandedView => ExpandedContainer;
-
     public SystemStatsWidget()
     {
         InitializeComponent();
@@ -24,6 +21,13 @@ public partial class SystemStatsWidget : UserControl, IIslandWidget
         };
 
         UpdateUi(SystemStatsService.Instance.CurrentStats);
+    }
+
+    public void SetExpanded(bool isExpanded)
+    {
+        CompactContainer.Visibility = isExpanded ? Visibility.Collapsed : Visibility.Visible;
+        ExpandedContainer.Visibility = isExpanded ? Visibility.Visible : Visibility.Collapsed;
+        SystemStatsService.Instance.SetActiveSampling(isExpanded);
     }
 
     private void UpdateUi(SystemStats stats)
@@ -50,19 +54,5 @@ public partial class SystemStatsWidget : UserControl, IIslandWidget
             TextExpBattery.Text = "Сеть 220V";
             BarBattery.Value = 100;
         }
-    }
-
-    public void OnActivated()
-    {
-        CompactContainer.Visibility = Visibility.Collapsed;
-        ExpandedContainer.Visibility = Visibility.Visible;
-        SystemStatsService.Instance.SetActiveSampling(true);
-    }
-
-    public void OnDeactivated()
-    {
-        ExpandedContainer.Visibility = Visibility.Collapsed;
-        CompactContainer.Visibility = Visibility.Visible;
-        SystemStatsService.Instance.SetActiveSampling(false);
     }
 }
