@@ -125,11 +125,11 @@ public partial class MainWindow : Window
                 },
                 ToolTip = widget.DisplayName,
                 Height = 26,
-                Padding = new Thickness(7, 0, 7, 0),
-                Margin = new Thickness(2, 0, 2, 0),
+                Padding = new Thickness(8, 0, 8, 0),
+                Margin = new Thickness(1, 0, 1, 0),
                 Background = Brushes.Transparent,
                 BorderThickness = new Thickness(0),
-                Foreground = (Brush?)TryFindResource("TextSecondaryBrush") ?? Brushes.Gray,
+                Foreground = new SolidColorBrush(Color.FromRgb(0x8E, 0x8E, 0x93)),
                 Cursor = Cursors.Hand,
                 Tag = widget
             };
@@ -152,17 +152,16 @@ public partial class MainWindow : Window
 
     private void UpdateTabSelection()
     {
-        var accentBrush = (Brush?)TryFindResource("AccentBrush") ?? Brushes.LimeGreen;
-        var textPrimaryBrush = (Brush?)TryFindResource("TextPrimaryBrush") ?? Brushes.White;
-        var textSecondaryBrush = (Brush?)TryFindResource("TextSecondaryBrush") ?? Brushes.Gray;
-        var activeBgBrush = new SolidColorBrush(Color.FromArgb(0x40, 0xFF, 0xFF, 0xFF));
+        var textPrimaryBrush = Brushes.White;
+        var textSecondaryBrush = new SolidColorBrush(Color.FromRgb(0x8E, 0x8E, 0x93));
+        var activePillBrush = new SolidColorBrush(Color.FromRgb(0x3A, 0x3A, 0x3C));
 
         foreach (var child in TabsPanel.Children)
         {
             if (child is Button btn && btn.Tag is IIslandWidget widget)
             {
                 bool isSelected = widget == _activeWidget;
-                btn.Background = isSelected ? activeBgBrush : Brushes.Transparent;
+                btn.Background = isSelected ? activePillBrush : Brushes.Transparent;
                 btn.Foreground = isSelected ? textPrimaryBrush : textSecondaryBrush;
             }
         }
@@ -186,12 +185,14 @@ public partial class MainWindow : Window
     {
         var cfg = ConfigService.Instance.Config;
         _hoverTimer.Interval = TimeSpan.FromMilliseconds(cfg.HoverDelayMs);
-        PillShadow.Opacity = cfg.ShowShadow ? 0.45 : 0;
+        PillShadow.Opacity = cfg.ShowShadow ? 0.5 : 0;
 
         if (!_isExpanded)
         {
             Width = cfg.CompactWidth * (cfg.ScalePercent / 100.0);
             Height = cfg.CompactHeight * (cfg.ScalePercent / 100.0);
+            IslandPill.CornerRadius = new CornerRadius(19);
+            AuraGlow.CornerRadius = new CornerRadius(19);
         }
 
         RebuildTabs();
@@ -245,6 +246,9 @@ public partial class MainWindow : Window
         double targetH = cfg.ExpandedHeight * (cfg.ScalePercent / 100.0);
 
         HeaderTabs.Visibility = Visibility.Visible;
+        IslandPill.CornerRadius = new CornerRadius(32);
+        AuraGlow.CornerRadius = new CornerRadius(32);
+
         _activeWidget?.SetExpanded(true);
         UpdateTabSelection();
 
@@ -261,6 +265,9 @@ public partial class MainWindow : Window
         double targetH = cfg.CompactHeight * (cfg.ScalePercent / 100.0);
 
         HeaderTabs.Visibility = Visibility.Collapsed;
+        IslandPill.CornerRadius = new CornerRadius(19);
+        AuraGlow.CornerRadius = new CornerRadius(19);
+
         _activeWidget?.SetExpanded(false);
 
         AnimateMorph(targetW, targetH);
@@ -271,7 +278,7 @@ public partial class MainWindow : Window
         double screenW = SystemParameters.PrimaryScreenWidth;
         double targetLeft = (screenW - targetWidth) / 2;
 
-        var duration = TimeSpan.FromMilliseconds(220);
+        var duration = TimeSpan.FromMilliseconds(260);
         var ease = new CubicEase { EasingMode = EasingMode.EaseOut };
 
         var wAnim = new DoubleAnimation(targetWidth, duration) { EasingFunction = ease };

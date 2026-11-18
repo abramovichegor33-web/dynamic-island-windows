@@ -3,16 +3,16 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              Foreground="{DynamicResource TextPrimaryBrush}">
   <Grid>
-    <!-- Compact View -->
+    <!-- ==================== COMPACT VIEW ==================== -->
     <StackPanel x:Name="CompactContainer" Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="8,0">
       <TextBlock Text="⚡" FontSize="11" Margin="0,0,4,0" VerticalAlignment="Center" />
-      <TextBlock x:Name="TextCompactCpu" Text="CPU 12%" FontSize="10.5" FontWeight="SemiBold" VerticalAlignment="Center" />
+      <TextBlock x:Name="TextCompactCpu" Text="CPU 12%" FontSize="11" FontWeight="SemiBold" Foreground="#FFFFFF" VerticalAlignment="Center" />
       <TextBlock Text="  " />
-      <TextBlock x:Name="TextCompactRam" Text="RAM 48%" FontSize="10.5" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center" />
+      <TextBlock x:Name="TextCompactRam" Text="RAM 48%" FontSize="11" FontWeight="SemiBold" Foreground="#8E8E93" VerticalAlignment="Center" />
     </StackPanel>
 
-    <!-- Expanded View -->
-    <Grid x:Name="ExpandedContainer" Visibility="Collapsed" Margin="20,14">
+    <!-- ==================== EXPANDED VIEW (iOS Activity Cards) ==================== -->
+    <Grid x:Name="ExpandedContainer" Visibility="Collapsed" Margin="16,8,16,12">
       <Grid.ColumnDefinitions>
         <ColumnDefinition Width="*" />
         <ColumnDefinition Width="*" />
@@ -20,29 +20,35 @@
       </Grid.ColumnDefinitions>
 
       <!-- CPU Card -->
-      <Border Grid.Column="0" Background="#18FFFFFF" CornerRadius="12" Padding="12,10" Margin="0,0,6,0">
+      <Border Grid.Column="0" Background="#1C1C1E" BorderBrush="#2C2C2E" BorderThickness="1" CornerRadius="14" Padding="12,10" Margin="0,0,6,0">
         <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-          <TextBlock Text="🖥️ CPU" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}" HorizontalAlignment="Center" />
-          <TextBlock x:Name="TextExpCpu" Text="12%" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource AccentBrush}" HorizontalAlignment="Center" Margin="0,4" />
-          <ProgressBar x:Name="BarCpu" Height="4" Width="80" Maximum="100" Value="12" Foreground="{DynamicResource AccentBrush}" Background="#33FFFFFF" BorderThickness="0" />
+          <TextBlock Text="⚡ ПРОЦЕССОР" FontSize="9.5" FontWeight="Bold" Foreground="#0A84FF" HorizontalAlignment="Center" />
+          <TextBlock x:Name="TextExpCpu" Text="12%" FontSize="22" FontWeight="Bold" Foreground="#FFFFFF" HorizontalAlignment="Center" Margin="0,4" />
+          <ProgressBar x:Name="BarCpu" Height="4" Width="82" Maximum="100" Value="12" Foreground="#0A84FF" Background="#2C2C2E" BorderThickness="0">
+            <ProgressBar.Resources><Style TargetType="Border"><Setter Property="CornerRadius" Value="2" /></Style></ProgressBar.Resources>
+          </ProgressBar>
         </StackPanel>
       </Border>
 
       <!-- RAM Card -->
-      <Border Grid.Column="1" Background="#18FFFFFF" CornerRadius="12" Padding="12,10" Margin="4,0,4,0">
+      <Border Grid.Column="1" Background="#1C1C1E" BorderBrush="#2C2C2E" BorderThickness="1" CornerRadius="14" Padding="12,10" Margin="3,0,3,0">
         <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-          <TextBlock Text="🧠 RAM" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}" HorizontalAlignment="Center" />
-          <TextBlock x:Name="TextExpRam" Text="48%" FontSize="20" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,4" />
-          <ProgressBar x:Name="BarRam" Height="4" Width="80" Maximum="100" Value="48" Foreground="{DynamicResource TextPrimaryBrush}" Background="#33FFFFFF" BorderThickness="0" />
+          <TextBlock Text="🧠 ПАМЯТЬ" FontSize="9.5" FontWeight="Bold" Foreground="#BF5AF2" HorizontalAlignment="Center" />
+          <TextBlock x:Name="TextExpRam" Text="48%" FontSize="22" FontWeight="Bold" Foreground="#FFFFFF" HorizontalAlignment="Center" Margin="0,4" />
+          <ProgressBar x:Name="BarRam" Height="4" Width="82" Maximum="100" Value="48" Foreground="#BF5AF2" Background="#2C2C2E" BorderThickness="0">
+            <ProgressBar.Resources><Style TargetType="Border"><Setter Property="CornerRadius" Value="2" /></Style></ProgressBar.Resources>
+          </ProgressBar>
         </StackPanel>
       </Border>
 
-      <!-- Battery Card -->
-      <Border Grid.Column="2" Background="#18FFFFFF" CornerRadius="12" Padding="12,10" Margin="6,0,0,0">
+      <!-- Battery / Power Card -->
+      <Border Grid.Column="2" Background="#1C1C1E" BorderBrush="#2C2C2E" BorderThickness="1" CornerRadius="14" Padding="12,10" Margin="6,0,0,0">
         <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-          <TextBlock x:Name="LabelBattery" Text="🔋 Батарея" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}" HorizontalAlignment="Center" />
-          <TextBlock x:Name="TextExpBattery" Text="100%" FontSize="20" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,4" />
-          <ProgressBar x:Name="BarBattery" Height="4" Width="80" Maximum="100" Value="100" Foreground="{DynamicResource AccentBrush}" Background="#33FFFFFF" BorderThickness="0" />
+          <TextBlock x:Name="LabelBattery" Text="🔋 ПИТАНИЕ" FontSize="9.5" FontWeight="Bold" Foreground="#30D158" HorizontalAlignment="Center" />
+          <TextBlock x:Name="TextExpBattery" Text="100%" FontSize="22" FontWeight="Bold" Foreground="#FFFFFF" HorizontalAlignment="Center" Margin="0,4" />
+          <ProgressBar x:Name="BarBattery" Height="4" Width="82" Maximum="100" Value="100" Foreground="#30D158" Background="#2C2C2E" BorderThickness="0">
+            <ProgressBar.Resources><Style TargetType="Border"><Setter Property="CornerRadius" Value="2" /></Style></ProgressBar.Resources>
+          </ProgressBar>
         </StackPanel>
       </Border>
     </Grid>

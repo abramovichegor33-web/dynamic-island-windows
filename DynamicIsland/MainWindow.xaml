@@ -8,43 +8,43 @@
         MouseEnter="Window_MouseEnter" MouseLeave="Window_MouseLeave"
         MouseLeftButtonDown="Window_MouseLeftButtonDown"
         AllowDrop="True" Drop="Window_Drop" DragEnter="Window_DragEnter"
-        FontFamily="Segoe UI, Segoe UI Variable Text"
+        FontFamily="Segoe UI Variable Text, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif"
         TextOptions.TextFormattingMode="Display"
         RenderOptions.BitmapScalingMode="HighQuality">
 
   <Window.ContextMenu>
-    <ContextMenu Background="#181B20" Foreground="White" BorderBrush="#333333">
+    <ContextMenu Background="#1C1C1E" Foreground="#FFFFFF" BorderBrush="#2C2C2E">
       <MenuItem Header="⚙️ Настройки..." Click="MenuSettings_Click" />
       <MenuItem Header="🎨 Следующая тема" Click="MenuNextTheme_Click" />
       <MenuItem Header="🎯 Центрировать на экране" Click="MenuRecenter_Click" />
-      <Separator Background="#333333" />
+      <Separator Background="#2C2C2E" />
       <MenuItem Header="❌ Выход" Click="MenuExit_Click" />
     </ContextMenu>
   </Window.ContextMenu>
 
-  <!-- Root Container -->
+  <!-- Root Container with Shadow Room -->
   <Grid x:Name="RootGrid" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="6">
     
     <!-- Aura Glow (Conditional) -->
-    <Border x:Name="AuraGlow" CornerRadius="{DynamicResource IslandCornerRadius}"
+    <Border x:Name="AuraGlow" CornerRadius="32"
             Background="{DynamicResource AuraGlowBrush}" Opacity="0.5"
             Margin="-4" IsHitTestVisible="False">
       <Border.Effect>
-        <BlurEffect Radius="16" />
+        <BlurEffect Radius="20" />
       </Border.Effect>
     </Border>
 
-    <!-- Main Island Capsule -->
+    <!-- Main Island Capsule (OLED Pitch Black + iOS Thin Glass Highlight Edge) -->
     <Border x:Name="IslandPill"
-            Background="{DynamicResource IslandBgBrush}"
-            BorderBrush="{DynamicResource IslandBorderBrush}"
-            BorderThickness="{DynamicResource IslandBorderThickness}"
-            CornerRadius="{DynamicResource IslandCornerRadius}"
+            Background="#000000"
+            BorderBrush="#25FFFFFF"
+            BorderThickness="1.0"
+            CornerRadius="19"
             ClipToBounds="True">
       
-      <!-- Soft Shadow -->
+      <!-- Apple Diffused Soft Ambient Shadow -->
       <Border.Effect>
-        <DropShadowEffect x:Name="PillShadow" BlurRadius="22" ShadowDepth="4" Opacity="0.45" Color="Black" Direction="270" />
+        <DropShadowEffect x:Name="PillShadow" BlurRadius="28" ShadowDepth="4" Opacity="0.5" Color="Black" Direction="270" />
       </Border.Effect>
 
       <Grid>
@@ -53,21 +53,24 @@
           <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <!-- Expanded Header Tabs Bar (Visible only when expanded) -->
-        <Grid x:Name="HeaderTabs" Grid.Row="0" Visibility="Collapsed" Height="32" Margin="10,6,10,2">
-          <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+        <!-- Expanded Header: iOS Segmented Capsule Bar -->
+        <Grid x:Name="HeaderTabs" Grid.Row="0" Visibility="Collapsed" Height="34" Margin="12,8,12,0">
+          
+          <!-- Centered Segmented Capsule -->
+          <Border Background="#1C1C1E" BorderBrush="#2AFFFFFF" BorderThickness="0.8" CornerRadius="15"
+                  Height="30" Padding="2" HorizontalAlignment="Center" VerticalAlignment="Center">
             <StackPanel x:Name="TabsPanel" Orientation="Horizontal" VerticalAlignment="Center">
-              <!-- Dynamically populated widget icon buttons -->
+              <!-- Dynamically populated iOS pill buttons -->
             </StackPanel>
-          </ScrollViewer>
+          </Border>
 
-          <!-- Settings gear icon button in top-right -->
-          <Button x:Name="BtnHeaderSettings" Content="⚙️" HorizontalAlignment="Right" VerticalAlignment="Center"
-                  Width="26" Height="26" FontSize="12" Background="#18FFFFFF" BorderThickness="0"
-                  Foreground="{DynamicResource TextSecondaryBrush}" Cursor="Hand" ToolTip="Настройки Dynamic Island"
+          <!-- Settings Button (Right) -->
+          <Button x:Name="BtnHeaderSettings" Content="⚙" HorizontalAlignment="Right" VerticalAlignment="Center"
+                  Width="28" Height="28" FontSize="13" Background="#1C1C1E" BorderBrush="#2AFFFFFF" BorderThickness="0.8"
+                  Foreground="#8E8E93" Cursor="Hand" ToolTip="Настройки Dynamic Island"
                   Click="MenuSettings_Click">
             <Button.Resources>
-              <Style TargetType="Border"><Setter Property="CornerRadius" Value="13" /></Style>
+              <Style TargetType="Border"><Setter Property="CornerRadius" Value="14" /></Style>
             </Button.Resources>
           </Button>
         </Grid>

@@ -3,86 +3,90 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              Foreground="{DynamicResource TextPrimaryBrush}">
   <Grid>
-    <!-- Compact View (Height = 36) -->
-    <Grid x:Name="CompactContainer" Height="36" VerticalAlignment="Center" Margin="6,0,8,0">
+    <!-- ==================== COMPACT VIEW (iOS Dynamic Island Pill) ==================== -->
+    <Grid x:Name="CompactContainer" Height="38" VerticalAlignment="Center" Margin="6,0,8,0">
       <Grid.ColumnDefinitions>
         <ColumnDefinition Width="Auto" />
         <ColumnDefinition Width="*" />
         <ColumnDefinition Width="Auto" />
       </Grid.ColumnDefinitions>
 
-      <!-- Mini Album Art -->
-      <Border Width="24" Height="24" CornerRadius="6" Background="#262626" ClipToBounds="True" Margin="2,0,8,0">
-        <Image x:Name="CompactArt" Stretch="UniformToFill" />
+      <!-- Mini Album Art (iOS rounded squircle) -->
+      <Border Width="24" Height="24" CornerRadius="7" Background="#1C1C1E" ClipToBounds="True"
+              BorderBrush="#25FFFFFF" BorderThickness="1" Margin="2,0,8,0">
+        <Image x:Name="CompactArt" Stretch="UniformToFill" RenderOptions.BitmapScalingMode="HighQuality" />
       </Border>
 
-      <!-- Track and Artist -->
+      <!-- Track Title & Artist (iOS Typography) -->
       <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="0,0,8,0">
-        <TextBlock x:Name="CompactTitle" Text="Нет трека" FontSize="11.5" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
-        <TextBlock x:Name="CompactArtist" Text="Включите музыку" FontSize="9.5" Foreground="{DynamicResource TextSecondaryBrush}" TextTrimming="CharacterEllipsis" />
+        <TextBlock x:Name="CompactTitle" Text="Музыка не играет" FontSize="11.5" FontWeight="SemiBold"
+                   Foreground="#FFFFFF" TextTrimming="CharacterEllipsis" />
+        <TextBlock x:Name="CompactArtist" Text="Включите трек" FontSize="9.5" FontWeight="Normal"
+                   Foreground="#8E8E93" TextTrimming="CharacterEllipsis" Margin="0,0.5,0,0" />
       </StackPanel>
 
-      <!-- Animated Visualizer Bars (Compact) -->
+      <!-- Apple Animated Waveform Visualizer (Compact) -->
       <StackPanel x:Name="CompactVisualizer" Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,4,0">
-        <Border x:Name="Bar1" Width="2.5" Height="10" Background="{DynamicResource AccentBrush}" CornerRadius="1.2" Margin="1,0" />
+        <Border x:Name="Bar1" Width="2.5" Height="8" Background="{DynamicResource AccentBrush}" CornerRadius="1.2" Margin="1,0" />
         <Border x:Name="Bar2" Width="2.5" Height="14" Background="{DynamicResource AccentBrush}" CornerRadius="1.2" Margin="1,0" />
-        <Border x:Name="Bar3" Width="2.5" Height="7" Background="{DynamicResource AccentBrush}" CornerRadius="1.2" Margin="1,0" />
-        <Border x:Name="Bar4" Width="2.5" Height="12" Background="{DynamicResource AccentBrush}" CornerRadius="1.2" Margin="1,0" />
+        <Border x:Name="Bar3" Width="2.5" Height="6" Background="{DynamicResource AccentBrush}" CornerRadius="1.2" Margin="1,0" />
+        <Border x:Name="Bar4" Width="2.5" Height="11" Background="{DynamicResource AccentBrush}" CornerRadius="1.2" Margin="1,0" />
       </StackPanel>
     </Grid>
 
-    <!-- Expanded View -->
-    <Grid x:Name="ExpandedContainer" Visibility="Collapsed" Margin="16,8,16,12">
+    <!-- ==================== EXPANDED VIEW (iOS Dynamic Island Expanded) ==================== -->
+    <Grid x:Name="ExpandedContainer" Visibility="Collapsed" Margin="16,6,16,12">
       <Grid.RowDefinitions>
         <RowDefinition Height="Auto" />
         <RowDefinition Height="Auto" />
         <RowDefinition Height="Auto" />
       </Grid.RowDefinitions>
 
-      <!-- Row 0: Album Art + Titles + Waveform Visualizer -->
-      <Grid Grid.Row="0" Margin="0,0,0,10">
+      <!-- ROW 0: Artwork + Track Details + Soundwave -->
+      <Grid Grid.Row="0" Margin="0,0,0,8">
         <Grid.ColumnDefinitions>
           <ColumnDefinition Width="Auto" />
           <ColumnDefinition Width="*" />
           <ColumnDefinition Width="Auto" />
         </Grid.ColumnDefinitions>
 
-        <!-- Big Album Art with soft shadow -->
-        <Border Width="64" Height="64" CornerRadius="12" Background="#1E2024" ClipToBounds="True" Margin="0,0,14,0"
-                BorderBrush="#25FFFFFF" BorderThickness="1">
+        <!-- Big Album Artwork with iOS Squircle and Soft Glow -->
+        <Border Width="64" Height="64" CornerRadius="14" Background="#1C1C1E" ClipToBounds="True"
+                BorderBrush="#25FFFFFF" BorderThickness="1" Margin="0,0,14,0">
           <Border.Effect>
-            <DropShadowEffect BlurRadius="12" ShadowDepth="2" Opacity="0.35" Color="Black" />
+            <DropShadowEffect BlurRadius="16" ShadowDepth="3" Opacity="0.45" Color="Black" />
           </Border.Effect>
-          <Image x:Name="ExpandedArt" Stretch="UniformToFill" />
+          <Image x:Name="ExpandedArt" Stretch="UniformToFill" RenderOptions.BitmapScalingMode="HighQuality" />
         </Border>
 
-        <!-- Titles -->
+        <!-- Title & Artist -->
         <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="0,0,10,0">
           <TextBlock x:Name="ExpandedTitle" Text="Ничего не воспроизводится" FontSize="15" FontWeight="Bold"
-                     TextTrimming="CharacterEllipsis" Foreground="{DynamicResource TextPrimaryBrush}" />
-          <TextBlock x:Name="ExpandedArtist" Text="Запустите Spotify, Яндекс или браузер" FontSize="12.5"
-                     Foreground="{DynamicResource TextSecondaryBrush}" TextTrimming="CharacterEllipsis" Margin="0,3,0,0" />
+                     Foreground="#FFFFFF" TextTrimming="CharacterEllipsis" />
+          <TextBlock x:Name="ExpandedArtist" Text="Запустите Spotify, Яндекс Музыку или браузер" FontSize="12"
+                     FontWeight="Normal" Foreground="#8E8E93" TextTrimming="CharacterEllipsis" Margin="0,3,0,0" />
         </StackPanel>
 
-        <!-- Live Waveform Visualizer Bars (Expanded) -->
+        <!-- Live Waveform Visualizer (Expanded) -->
         <StackPanel x:Name="ExpVisualizer" Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
-          <Border x:Name="ExpBar1" Width="3" Height="14" Background="{DynamicResource AccentBrush}" CornerRadius="1.5" Margin="1.5,0" />
+          <Border x:Name="ExpBar1" Width="3" Height="12" Background="{DynamicResource AccentBrush}" CornerRadius="1.5" Margin="1.5,0" />
           <Border x:Name="ExpBar2" Width="3" Height="22" Background="{DynamicResource AccentBrush}" CornerRadius="1.5" Margin="1.5,0" />
-          <Border x:Name="ExpBar3" Width="3" Height="10" Background="{DynamicResource AccentBrush}" CornerRadius="1.5" Margin="1.5,0" />
+          <Border x:Name="ExpBar3" Width="3" Height="8" Background="{DynamicResource AccentBrush}" CornerRadius="1.5" Margin="1.5,0" />
           <Border x:Name="ExpBar4" Width="3" Height="18" Background="{DynamicResource AccentBrush}" CornerRadius="1.5" Margin="1.5,0" />
-          <Border x:Name="ExpBar5" Width="3" Height="12" Background="{DynamicResource AccentBrush}" CornerRadius="1.5" Margin="1.5,0" />
+          <Border x:Name="ExpBar5" Width="3" Height="10" Background="{DynamicResource AccentBrush}" CornerRadius="1.5" Margin="1.5,0" />
         </StackPanel>
       </Grid>
 
-      <!-- Row 1: Scrubbing / Progress Bar with timestamps -->
-      <Grid Grid.Row="1" Margin="0,2,0,10">
+      <!-- ROW 1: iOS Scrubber (Progress Track + Tabular Timestamps) -->
+      <Grid Grid.Row="1" Margin="0,2,0,8">
         <Grid.RowDefinitions>
           <RowDefinition Height="Auto" />
           <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
+        <!-- iOS Thin Progress Bar -->
         <ProgressBar x:Name="PlaybackProgress" Height="4" Maximum="100" Value="0"
-                     Foreground="{DynamicResource AccentBrush}" Background="#2AFFFFFF" BorderThickness="0">
+                     Foreground="{DynamicResource AccentBrush}" Background="#2C2C2E" BorderThickness="0">
           <ProgressBar.Resources>
             <Style TargetType="Border">
               <Setter Property="CornerRadius" Value="2" />
@@ -90,42 +94,47 @@
           </ProgressBar.Resources>
         </ProgressBar>
 
+        <!-- Timestamps -->
         <Grid Grid.Row="1" Margin="0,4,0,0">
-          <TextBlock x:Name="TextElapsed" Text="0:00" FontSize="10" Foreground="{DynamicResource TextSecondaryBrush}" HorizontalAlignment="Left" />
-          <TextBlock x:Name="TextTotal" Text="0:00" FontSize="10" Foreground="{DynamicResource TextSecondaryBrush}" HorizontalAlignment="Right" />
+          <TextBlock x:Name="TextElapsed" Text="0:00" FontSize="10.5" FontWeight="Medium" Foreground="#8E8E93" HorizontalAlignment="Left" />
+          <TextBlock x:Name="TextTotal" Text="0:00" FontSize="10.5" FontWeight="Medium" Foreground="#8E8E93" HorizontalAlignment="Right" />
         </Grid>
       </Grid>
 
-      <!-- Row 2: Playback Controls Row -->
+      <!-- ROW 2: iOS Playback Controls Bar -->
       <Grid Grid.Row="2">
-        <!-- Controls centered -->
-        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="*" />
+          <ColumnDefinition Width="Auto" />
+          <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <!-- Centered Playback Buttons (Previous, Big Play/Pause, Next) -->
+        <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
           <!-- Previous Button -->
-          <Button x:Name="BtnPrev" Width="38" Height="38" Background="#18FFFFFF" BorderThickness="0"
-                  Foreground="{DynamicResource TextPrimaryBrush}" FontSize="15" Cursor="Hand" Margin="8,0"
-                  Click="BtnPrev_Click">
+          <Button x:Name="BtnPrev" Width="40" Height="40" Background="Transparent" BorderThickness="0"
+                  Foreground="#FFFFFF" FontSize="16" Cursor="Hand" Margin="10,0" Click="BtnPrev_Click">
             <Button.Resources>
-              <Style TargetType="Border"><Setter Property="CornerRadius" Value="19" /></Style>
+              <Style TargetType="Border"><Setter Property="CornerRadius" Value="20" /></Style>
             </Button.Resources>
             <TextBlock Text="⏮" Margin="0,-2,0,0" HorizontalAlignment="Center" VerticalAlignment="Center" />
           </Button>
 
-          <!-- Play/Pause Button (Prominent) -->
-          <Button x:Name="BtnPlayPause" Width="46" Height="46" Background="{DynamicResource AccentBrush}"
-                  BorderThickness="0" Foreground="Black" FontSize="18" Cursor="Hand" Margin="8,0"
+          <!-- Circular iOS Play/Pause Button -->
+          <Button x:Name="BtnPlayPause" Width="48" Height="48" Background="{DynamicResource AccentBrush}"
+                  BorderThickness="0" Foreground="#000000" FontSize="20" Cursor="Hand" Margin="10,0"
                   Click="BtnPlayPause_Click">
             <Button.Resources>
-              <Style TargetType="Border"><Setter Property="CornerRadius" Value="23" /></Style>
+              <Style TargetType="Border"><Setter Property="CornerRadius" Value="24" /></Style>
             </Button.Resources>
             <TextBlock x:Name="IconPlayPause" Text="▶" Margin="2,-1,0,0" HorizontalAlignment="Center" VerticalAlignment="Center" />
           </Button>
 
           <!-- Next Button -->
-          <Button x:Name="BtnNext" Width="38" Height="38" Background="#18FFFFFF" BorderThickness="0"
-                  Foreground="{DynamicResource TextPrimaryBrush}" FontSize="15" Cursor="Hand" Margin="8,0"
-                  Click="BtnNext_Click">
+          <Button x:Name="BtnNext" Width="40" Height="40" Background="Transparent" BorderThickness="0"
+                  Foreground="#FFFFFF" FontSize="16" Cursor="Hand" Margin="10,0" Click="BtnNext_Click">
             <Button.Resources>
-              <Style TargetType="Border"><Setter Property="CornerRadius" Value="19" /></Style>
+              <Style TargetType="Border"><Setter Property="CornerRadius" Value="20" /></Style>
             </Button.Resources>
             <TextBlock Text="⏭" Margin="0,-2,0,0" HorizontalAlignment="Center" VerticalAlignment="Center" />
           </Button>
