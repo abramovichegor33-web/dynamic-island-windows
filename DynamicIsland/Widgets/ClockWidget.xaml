@@ -25,7 +25,8 @@
                    Foreground="{DynamicResource TextSecondaryBrush}" HorizontalAlignment="Center" />
       </StackPanel>
 
-      <Separator Grid.Column="1" Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" Margin="16,4" Background="#33FFFFFF" />
+      <!-- Divider -->
+      <Border Grid.Column="1" Width="1" Margin="16,4" Background="#33FFFFFF" />
 
       <!-- Right Column: Stopwatch / Timer -->
       <StackPanel Grid.Column="2" VerticalAlignment="Center" HorizontalAlignment="Center">

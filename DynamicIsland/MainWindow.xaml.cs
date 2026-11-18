@@ -116,7 +116,7 @@ public partial class MainWindow : Window
                 Margin = new Thickness(2, 0, 2, 0),
                 Background = System.Windows.Media.Brushes.Transparent,
                 BorderThickness = new Thickness(0),
-                Foreground = (System.Windows.Media.Brush)FindResource("TextPrimaryBrush"),
+                Foreground = (System.Windows.Media.Brush?)TryFindResource("TextPrimaryBrush") ?? System.Windows.Media.Brushes.White,
                 Cursor = Cursors.Hand,
                 Tag = widget
             };

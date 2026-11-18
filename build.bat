@@ -1,51 +1,61 @@
 @echo off
 chcp 65001 > nul
+cd /d "%~dp0"
 title Сборка Dynamic Island для Windows 10
+
 echo ========================================================
-echo   Сборка Dynamic Island для Windows 10 (Оптимизированный)
+echo   Сборка Dynamic Island для Windows 10
 echo ========================================================
 echo.
 
+:: 1. Проверяем наличие dotnet в PATH или стандартной папке Program Files
+set "DOTNET_CMD=dotnet"
+
 where dotnet >nul 2>nul
 if %errorlevel% neq 0 (
-    echo [.NET SDK не найден в системе]
-    echo.
-    echo Пытаемся автоматически установить .NET 8 через winget...
-    where winget >nul 2>nul
-    if %errorlevel% equ 0 (
-        winget install --id Microsoft.DotNet.SDK.8 -e --accept-source-agreements --accept-package-agreements
-        echo.
-        echo Если установка завершилась успешно, перезапустите этот файл (build.bat).
-        pause
-        exit /b 0
+    if exist "%ProgramFiles%\dotnet\dotnet.exe" (
+        set "DOTNET_CMD=%ProgramFiles%\dotnet\dotnet.exe"
+        set "PATH=%ProgramFiles%\dotnet;%PATH%"
+    ) else if exist "%ProgramFiles(x86)%\dotnet\dotnet.exe" (
+        set "DOTNET_CMD=%ProgramFiles(x86)%\dotnet\dotnet.exe"
+        set "PATH=%ProgramFiles(x86)%\dotnet;%PATH%"
     ) else (
-        echo [Внимание] Скачайте и установите бесплатный .NET 8 SDK вручную:
-        echo https://dotnet.microsoft.com/download/dotnet/8.0
-        echo После установки снова запустите этот файл.
+        echo [ОШИБКА: .NET SDK не найден]
+        echo.
+        echo Пожалуйста, установите официальный .NET 8 SDK от Microsoft:
+        echo https://aka.ms/dotnet/8.0/dotnet-sdk-win-x64.exe
+        echo.
+        echo Если вы уже установили его прямо сейчас - перезагрузите компьютер
+        echo или перезапустите Проводник, чтобы Windows обновила пути.
+        echo.
         pause
         exit /b 1
     )
 )
 
-echo Компиляция и создание автономного .EXE файла...
-echo Это займет около 15-30 секунд...
+echo Обнаружен .NET: %DOTNET_CMD%
+echo Идет сборка программы в один файл DynamicIsland.exe...
+echo Пожалуйста, подождите 15-20 секунд...
 echo.
 
-dotnet publish DynamicIsland\DynamicIsland.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o Publish
+"%DOTNET_CMD%" publish "%~dp0DynamicIsland\DynamicIsland.csproj" -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o "%~dp0Publish"
 
-if %errorlevel% equ 0 (
+if exist "%~dp0Publish\DynamicIsland.exe" (
     echo.
     echo ========================================================
-    echo   [УСПЕХ] Готово! Исполняемый файл собран:
+    echo   [УСПЕХ!] Файл успешно создан:
     echo   %~dp0Publish\DynamicIsland.exe
     echo ========================================================
     echo.
-    set /p runNow="Запустить Dynamic Island прямо сейчас? (Y/N): "
-    if /i "%runNow%"=="Y" (
-        start "" "%~dp0Publish\DynamicIsland.exe"
-    )
+    echo Запуск Dynamic Island...
+    start "" "%~dp0Publish\DynamicIsland.exe"
+    timeout /t 3 >nul
+    exit /b 0
 ) else (
     echo.
-    echo [ОШИБКА] Сборка завершилась с ошибкой. Проверьте вывод выше.
+    echo [ОШИБКА] Не удалось создать DynamicIsland.exe.
+    echo Код ошибки: %errorlevel%
+    echo.
     pause
+    exit /b 1
 )
