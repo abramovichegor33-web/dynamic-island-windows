@@ -1,3 +1,4 @@
+using System.Linq;
 using Windows.UI.Notifications;
 using Windows.UI.Notifications.Management;
 
