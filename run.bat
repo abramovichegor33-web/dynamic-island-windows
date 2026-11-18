@@ -1,5 +1,7 @@
 @echo off
-chcp 65001 > nul
-echo Запуск Dynamic Island...
-dotnet run --project DynamicIsland\DynamicIsland.csproj -c Release
-pause
+cd /d "%~dp0"
+if exist "%~dp0Publish\DynamicIsland.exe" (
+    start "" "%~dp0Publish\DynamicIsland.exe"
+) else (
+    powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0build.ps1"
+)
