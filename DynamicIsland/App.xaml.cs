@@ -1,3 +1,4 @@
+using System.IO;
 using System.Threading;
 using System.Windows;
 using DynamicIsland.Services;
@@ -10,18 +11,42 @@ public partial class App : Application
 
     protected override void OnStartup(StartupEventArgs e)
     {
+        // Global exception handling to prevent any hard crashes
+        AppDomain.CurrentDomain.UnhandledException += (s, args) =>
+        {
+            try
+            {
+                var err = args.ExceptionObject?.ToString() ?? "Unknown error";
+                File.AppendAllText("crash.log", $"[{DateTime.Now}] AppDomain Exception: {err}\n");
+            }
+            catch { }
+        };
+
+        DispatcherUnhandledException += (s, args) =>
+        {
+            try
+            {
+                File.AppendAllText("crash.log", $"[{DateTime.Now}] Dispatcher Exception: {args.Exception}\n");
+            }
+            catch { }
+            args.Handled = true; // Prevent app termination
+        };
+
         const string appGuid = "DynamicIsland_Win10_Singleton_Guid";
         _singleInstanceMutex = new Mutex(true, appGuid, out bool isNewInstance);
 
         if (!isNewInstance)
         {
-            MessageBox.Show("Приложение Dynamic Island уже запущено!", "Dynamic Island", MessageBoxButton.OK, MessageBoxImage.Information);
+            MessageBox.Show("Dynamic Island уже запущен!", "Dynamic Island", MessageBoxButton.OK, MessageBoxImage.Information);
             Shutdown();
             return;
         }
 
-        // Initialize Themes and Services
-        _ = ThemeService.Instance;
+        try
+        {
+            _ = ThemeService.Instance;
+        }
+        catch { }
 
         base.OnStartup(e);
     }

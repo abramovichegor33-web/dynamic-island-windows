@@ -51,31 +51,38 @@ public partial class MainWindow : Window
 
     private void MainWindow_Loaded(object sender, RoutedEventArgs e)
     {
-        InitWidgets();
-        ApplyConfig();
-        Recenter();
-
-        ConfigService.Instance.ConfigChanged += _ => Dispatcher.Invoke(ApplyConfig);
-        ThemeService.Instance.ThemeChanged += OnThemeChanged;
-
-        // Reactive events
-        VolumeService.Instance.VolumeChanged += (vol, muted) =>
+        try
         {
-            Dispatcher.Invoke(() => TriggerEventExpansion(_volumeWidget, 2.5));
-        };
+            InitWidgets();
+            ApplyConfig();
+            Recenter();
 
-        MediaService.Instance.TrackChanged += track =>
-        {
-            if (track.IsPlaying && !string.IsNullOrWhiteSpace(track.Title))
+            ConfigService.Instance.ConfigChanged += _ => Dispatcher.Invoke(ApplyConfig);
+            ThemeService.Instance.ThemeChanged += OnThemeChanged;
+
+            // Reactive events
+            VolumeService.Instance.VolumeChanged += (vol, muted) =>
             {
-                Dispatcher.Invoke(() => TriggerEventExpansion(_musicWidget, 3.0));
-            }
-        };
+                Dispatcher.Invoke(() => TriggerEventExpansion(_volumeWidget, 2.5));
+            };
 
-        NotificationService.Instance.NotificationReceived += _ =>
+            MediaService.Instance.TrackChanged += track =>
+            {
+                if (track.IsPlaying && !string.IsNullOrWhiteSpace(track.Title))
+                {
+                    Dispatcher.Invoke(() => TriggerEventExpansion(_musicWidget, 3.0));
+                }
+            };
+
+            NotificationService.Instance.NotificationReceived += _ =>
+            {
+                Dispatcher.Invoke(() => TriggerEventExpansion(_notificationWidget, 4.0));
+            };
+        }
+        catch (Exception ex)
         {
-            Dispatcher.Invoke(() => TriggerEventExpansion(_notificationWidget, 4.0));
-        };
+            try { System.IO.File.AppendAllText("crash.log", $"[{DateTime.Now}] Loaded Exception: {ex}\n"); } catch { }
+        }
     }
 
     private void InitWidgets()
