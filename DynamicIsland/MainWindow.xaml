@@ -1,13 +1,10 @@
 <Window x:Class="DynamicIsland.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d"
         Title="Dynamic Island"
-        WindowStyle="None" AllowsTransparency="True" Background="Transparent"
+        WindowStyle="None" AllowsTransparency="True" Background="{x:Null}"
         Topmost="True" ShowInTaskbar="False" ResizeMode="NoResize"
-        Width="236" Height="58"
+        Width="480" Height="230"
         MouseEnter="Window_MouseEnter" MouseLeave="Window_MouseLeave"
         MouseLeftButtonDown="Window_MouseLeftButtonDown"
         AllowDrop="True" Drop="Window_Drop" DragEnter="Window_DragEnter"
@@ -25,21 +22,28 @@
     </ContextMenu>
   </Window.ContextMenu>
 
-  <!-- Root Container with Shadow Room -->
-  <Grid x:Name="RootGrid" Margin="10">
+  <!-- Canvas Root (Null Background passes clicks through) -->
+  <Grid x:Name="RootGrid" Background="{x:Null}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
 
     <!-- Aura Glow (Conditional) -->
-    <Border x:Name="AuraGlow" CornerRadius="19"
+    <Border x:Name="AuraGlow"
+            Width="216" Height="38"
+            CornerRadius="19"
+            HorizontalAlignment="Center" VerticalAlignment="Top"
+            Margin="0,10,0,0"
             Background="{StaticResource AccentGreenBrush}" Opacity="0.4"
-            Margin="-4" IsHitTestVisible="False" Visibility="Collapsed">
+            IsHitTestVisible="False" Visibility="Collapsed">
       <Border.Effect>
-        <BlurEffect Radius="22" />
+        <BlurEffect Radius="24" />
       </Border.Effect>
     </Border>
 
-    <!-- Main Island Capsule (Apple True OLED Black + Hairline Rim Border) -->
+    <!-- Main Island Capsule (Hardware-Accelerated In-Place Morphing) -->
     <Border x:Name="IslandPill"
             Width="216" Height="38"
+            HorizontalAlignment="Center" VerticalAlignment="Top"
+            Margin="0,10,0,0"
+            MouseEnter="Pill_MouseEnter" MouseLeave="Pill_MouseLeave"
             Background="{StaticResource IslandPureBlackBrush}"
             BorderBrush="{StaticResource IslandRimBorderBrush}"
             BorderThickness="1"
@@ -48,7 +52,7 @@
       
       <!-- Apple Diffused Ambient Shadow -->
       <Border.Effect>
-        <DropShadowEffect x:Name="PillShadow" BlurRadius="28" ShadowDepth="4" Opacity="0.5" Color="Black" Direction="270" />
+        <DropShadowEffect x:Name="PillShadow" BlurRadius="26" ShadowDepth="4" Opacity="0.5" Color="Black" Direction="270" />
       </Border.Effect>
 
       <Grid>
@@ -62,10 +66,17 @@
             <ColumnDefinition Width="Auto" />
           </Grid.ColumnDefinitions>
 
-          <!-- Left: Mini Album Cover (24x24 Squircle) -->
+          <!-- Left: Mini Album Cover with Apple Fallback -->
           <Border Width="24" Height="24" CornerRadius="6" Background="{StaticResource GlassSurfaceBrush}"
                   BorderBrush="#25FFFFFF" BorderThickness="1" ClipToBounds="True" Margin="2,0,8,0">
-            <Image x:Name="CompactArt" Stretch="UniformToFill" />
+            <Grid>
+              <Border Background="#222225">
+                <Viewbox Width="12" Height="12" Stretch="Uniform">
+                  <Path Data="{StaticResource MusicNoteGeometry}" Fill="{StaticResource TextSecondaryBrush}" />
+                </Viewbox>
+              </Border>
+              <Image x:Name="CompactArt" Stretch="UniformToFill" />
+            </Grid>
           </Border>
 
           <!-- Center: Marquee / Truncated Track Title & Artist -->
@@ -118,12 +129,13 @@
             </Border>
 
             <!-- Right: Circular Settings Button -->
-            <Button x:Name="BtnSettings" Width="26" Height="26" Style="{StaticResource AppleIconButton}"
+            <Button x:Name="BtnSettings" Width="28" Height="28" Style="{StaticResource AppleIconButton}"
                     HorizontalAlignment="Right" VerticalAlignment="Center" Click="MenuSettings_Click"
                     ToolTip="Настройки Dynamic Island">
-              <Border Background="{StaticResource GlassSurfaceBrush}" CornerRadius="13" Width="26" Height="26">
-                <Path Data="{StaticResource SettingsGearGeometry}" Fill="{StaticResource TextSecondaryBrush}"
-                      Width="13" Height="13" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center" />
+              <Border Background="{StaticResource GlassSurfaceBrush}" CornerRadius="14" Width="28" Height="28">
+                <Viewbox Width="14" Height="14" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center">
+                  <Path Data="{StaticResource SettingsGearGeometry}" Fill="{StaticResource TextSecondaryBrush}" />
+                </Viewbox>
               </Border>
             </Button>
           </Grid>
@@ -144,13 +156,27 @@
                 <ColumnDefinition Width="Auto" />
               </Grid.ColumnDefinitions>
 
-              <!-- 64x64 Album Art (iOS Squircle CornerRadius=14) -->
+              <!-- 64x64 Album Art with Apple Music Gradient Fallback -->
               <Border Width="64" Height="64" CornerRadius="14" Background="{StaticResource GlassSurfaceBrush}"
                       BorderBrush="#25FFFFFF" BorderThickness="1" ClipToBounds="True" Margin="0,0,14,0">
                 <Border.Effect>
                   <DropShadowEffect BlurRadius="16" ShadowDepth="2" Opacity="0.4" Color="Black" />
                 </Border.Effect>
-                <Image x:Name="ExpandedArt" Stretch="UniformToFill" />
+                <Grid>
+                  <!-- Apple Music Fallback Tile -->
+                  <Border>
+                    <Border.Background>
+                      <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                        <GradientStop Color="#FA233B" Offset="0.0" />
+                        <GradientStop Color="#FB5C74" Offset="1.0" />
+                      </LinearGradientBrush>
+                    </Border.Background>
+                    <Viewbox Width="28" Height="28" Stretch="Uniform">
+                      <Path Data="{StaticResource MusicNoteGeometry}" Fill="#FFFFFF" />
+                    </Viewbox>
+                  </Border>
+                  <Image x:Name="ExpandedArt" Stretch="UniformToFill" />
+                </Grid>
               </Border>
 
               <!-- Track Details -->
@@ -171,7 +197,7 @@
               </StackPanel>
             </Grid>
 
-            <!-- Row 1: iOS Scrubber Slider + Tabular Timestamps -->
+            <!-- Row 1: iOS Interactive Scrubber Slider + Countdown Timestamps -->
             <Grid Grid.Row="1" Margin="0,0,0,8">
               <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
@@ -192,25 +218,30 @@
               </Grid>
             </Grid>
 
-            <!-- Row 2: Centered Transport Controls -->
+            <!-- Row 2: Centered Transport Controls with Viewbox centering -->
             <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
               <!-- Previous Button -->
               <Button x:Name="BtnPrev" Width="38" Height="38" Style="{StaticResource AppleIconButton}"
                       Margin="12,0" Click="BtnPrev_Click">
-                <Path Data="{StaticResource PrevGeometry}" Fill="{StaticResource TextPrimaryBrush}" Width="15" Height="15" Stretch="Uniform" />
+                <Viewbox Width="16" Height="16" Stretch="Uniform">
+                  <Path Data="{StaticResource PrevGeometry}" Fill="{StaticResource TextPrimaryBrush}" />
+                </Viewbox>
               </Button>
 
               <!-- Play / Pause Circular Primary Button -->
               <Button x:Name="BtnPlayPause" Style="{StaticResource ApplePrimaryCircleButton}"
-                      Margin="12,0" Click="BtnPlayPause_Click">
-                <Path x:Name="IconPlayPause" Data="{StaticResource PlayGeometry}" Fill="{StaticResource IslandPureBlackBrush}"
-                      Width="16" Height="16" Stretch="Uniform" Margin="2,0,0,0" />
+                      Margin="14,0" Click="BtnPlayPause_Click">
+                <Viewbox Width="18" Height="18" Stretch="Uniform">
+                  <Path x:Name="IconPlayPause" Data="{StaticResource PlayGeometry}" Fill="{StaticResource IslandPureBlackBrush}" />
+                </Viewbox>
               </Button>
 
               <!-- Next Button -->
               <Button x:Name="BtnNext" Width="38" Height="38" Style="{StaticResource AppleIconButton}"
                       Margin="12,0" Click="BtnNext_Click">
-                <Path Data="{StaticResource NextGeometry}" Fill="{StaticResource TextPrimaryBrush}" Width="15" Height="15" Stretch="Uniform" />
+                <Viewbox Width="16" Height="16" Stretch="Uniform">
+                  <Path Data="{StaticResource NextGeometry}" Fill="{StaticResource TextPrimaryBrush}" />
+                </Viewbox>
               </Button>
             </StackPanel>
           </Grid>
@@ -223,8 +254,10 @@
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                   <Button x:Name="BtnMute" Width="32" Height="32" Style="{StaticResource AppleIconButton}" Margin="0,0,10,0" Click="BtnMute_Click">
                     <Border Background="{StaticResource GlassSurfaceBrush}" CornerRadius="16" Width="32" Height="32">
-                      <Path x:Name="IconVolumeSpeaker" Data="{StaticResource VolumeWaveHighGeometry}"
-                            Fill="{StaticResource TextPrimaryBrush}" Width="14" Height="14" Stretch="Uniform" />
+                      <Viewbox Width="15" Height="15" Stretch="Uniform">
+                        <Path x:Name="IconVolumeSpeaker" Data="{StaticResource VolumeWaveHighGeometry}"
+                              Fill="{StaticResource TextPrimaryBrush}" />
+                      </Viewbox>
                     </Border>
                   </Button>
                   <StackPanel VerticalAlignment="Center">
@@ -301,8 +334,9 @@
                 </Grid.ColumnDefinitions>
 
                 <!-- Weather Vector Icon / Glyph -->
-                <Path Data="{StaticResource WeatherSunCloudGeometry}" Fill="{StaticResource AccentBlueBrush}"
-                      Width="46" Height="46" Stretch="Uniform" Margin="0,0,16,0" VerticalAlignment="Center" />
+                <Viewbox Width="44" Height="44" Stretch="Uniform" Margin="0,0,16,0" VerticalAlignment="Center">
+                  <Path Data="{StaticResource WeatherSunCloudGeometry}" Fill="{StaticResource AccentBlueBrush}" />
+                </Viewbox>
 
                 <!-- Details -->
                 <StackPanel Grid.Column="1" VerticalAlignment="Center">
@@ -319,7 +353,9 @@
                 <Button x:Name="BtnRefresh" Grid.Column="2" Width="32" Height="32" Style="{StaticResource AppleIconButton}"
                         VerticalAlignment="Center" Click="BtnRefresh_Click">
                   <Border Background="{StaticResource GlassSurfaceHoverBrush}" CornerRadius="16" Width="32" Height="32">
-                    <Path Data="{StaticResource RefreshGeometry}" Fill="{StaticResource TextPrimaryBrush}" Width="14" Height="14" Stretch="Uniform" />
+                    <Viewbox Width="14" Height="14" Stretch="Uniform">
+                      <Path Data="{StaticResource RefreshGeometry}" Fill="{StaticResource TextPrimaryBrush}" />
+                    </Viewbox>
                   </Border>
                 </Button>
               </Grid>
@@ -395,8 +431,9 @@
                   <Border x:Name="DropPrompt" BorderBrush="{StaticResource GlassSurfaceHoverBrush}" BorderThickness="1"
                           CornerRadius="12" Background="Transparent" Margin="2">
                     <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-                      <Path Data="{StaticResource FolderIconGeometry}" Fill="{StaticResource TextSecondaryBrush}"
-                            Width="22" Height="22" Stretch="Uniform" HorizontalAlignment="Center" Margin="0,0,0,4" />
+                      <Viewbox Width="22" Height="22" Stretch="Uniform" HorizontalAlignment="Center" Margin="0,0,0,4">
+                        <Path Data="{StaticResource FolderIconGeometry}" Fill="{StaticResource TextSecondaryBrush}" />
+                      </Viewbox>
                       <TextBlock Text="Перетащите файлы сюда для быстрого доступа" FontSize="11"
                                  Foreground="{StaticResource TextSecondaryBrush}" HorizontalAlignment="Center" />
                     </StackPanel>

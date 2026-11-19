@@ -96,6 +96,14 @@ public partial class SettingsWindow : Window
             LblTopOffset.Text = $"Отступ от верхнего края экрана: {(int)e.NewValue} px";
     }
 
+    private void Window_MouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+    {
+        if (e.LeftButton == System.Windows.Input.MouseButtonState.Pressed)
+        {
+            DragMove();
+        }
+    }
+
     private void BtnCancel_Click(object sender, RoutedEventArgs e)
     {
         Close();

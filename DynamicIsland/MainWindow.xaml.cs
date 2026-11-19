@@ -135,11 +135,14 @@ public partial class MainWindow : Window
 
     private void ApplyInitialSizing()
     {
-        Width = 236;
-        Height = 58;
+        Width = 480;
+        Height = 230;
         IslandPill.Width = 216;
         IslandPill.Height = 38;
         IslandPill.CornerRadius = new CornerRadius(19);
+        AuraGlow.Width = 216;
+        AuraGlow.Height = 38;
+        AuraGlow.CornerRadius = new CornerRadius(19);
         CompactContainer.Visibility = Visibility.Visible;
         ExpandedContainer.Visibility = Visibility.Collapsed;
     }
@@ -147,7 +150,7 @@ public partial class MainWindow : Window
     public void Recenter()
     {
         double screenW = SystemParameters.PrimaryScreenWidth;
-        Top = 10;
+        Top = 0;
         Left = (screenW - Width) / 2;
     }
 
@@ -189,8 +192,16 @@ public partial class MainWindow : Window
 
         CompactContainer.Visibility = Visibility.Collapsed;
         ExpandedContainer.Visibility = Visibility.Visible;
+        ExpandedContainer.Opacity = 0;
 
-        AnimateMorph(targetWindowW: 464, targetWindowH: 212, targetPillW: 444, targetPillH: 192, targetRadius: 34);
+        var fadeIn = new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(220))
+        {
+            BeginTime = TimeSpan.FromMilliseconds(80),
+            EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
+        };
+        ExpandedContainer.BeginAnimation(OpacityProperty, fadeIn);
+
+        AnimateMorph(targetPillW: 444, targetPillH: 192, targetRadius: 34);
     }
 
     private void CollapseIsland()
@@ -200,34 +211,34 @@ public partial class MainWindow : Window
 
         ExpandedContainer.Visibility = Visibility.Collapsed;
         CompactContainer.Visibility = Visibility.Visible;
+        CompactContainer.Opacity = 0;
 
-        AnimateMorph(targetWindowW: 236, targetWindowH: 58, targetPillW: 216, targetPillH: 38, targetRadius: 19);
+        var fadeIn = new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(180))
+        {
+            BeginTime = TimeSpan.FromMilliseconds(40),
+            EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
+        };
+        CompactContainer.BeginAnimation(OpacityProperty, fadeIn);
+
+        AnimateMorph(targetPillW: 216, targetPillH: 38, targetRadius: 19);
     }
 
-    private void AnimateMorph(double targetWindowW, double targetWindowH, double targetPillW, double targetPillH, double targetRadius)
+    private void AnimateMorph(double targetPillW, double targetPillH, double targetRadius)
     {
-        double screenW = SystemParameters.PrimaryScreenWidth;
-        double targetLeft = (screenW - targetWindowW) / 2;
-
-        var duration = TimeSpan.FromMilliseconds(320);
+        var duration = TimeSpan.FromMilliseconds(340);
         var ease = new CubicEase { EasingMode = EasingMode.EaseOut };
 
-        // Animate Window bounds
-        var winWAnim = new DoubleAnimation(targetWindowW, duration) { EasingFunction = ease };
-        var winHAnim = new DoubleAnimation(targetWindowH, duration) { EasingFunction = ease };
-        var winLAnim = new DoubleAnimation(targetLeft, duration) { EasingFunction = ease };
+        var wAnim = new DoubleAnimation(targetPillW, duration) { EasingFunction = ease };
+        var hAnim = new DoubleAnimation(targetPillH, duration) { EasingFunction = ease };
 
-        BeginAnimation(WidthProperty, winWAnim);
-        BeginAnimation(HeightProperty, winHAnim);
-        BeginAnimation(LeftProperty, winLAnim);
+        IslandPill.BeginAnimation(WidthProperty, wAnim);
+        IslandPill.BeginAnimation(HeightProperty, hAnim);
 
-        // Animate Island Pill Dimensions
-        var pillWAnim = new DoubleAnimation(targetPillW, duration) { EasingFunction = ease };
-        var pillHAnim = new DoubleAnimation(targetPillH, duration) { EasingFunction = ease };
+        AuraGlow.BeginAnimation(WidthProperty, wAnim);
+        AuraGlow.BeginAnimation(HeightProperty, hAnim);
 
-        IslandPill.BeginAnimation(WidthProperty, pillWAnim);
-        IslandPill.BeginAnimation(HeightProperty, pillHAnim);
         IslandPill.CornerRadius = new CornerRadius(targetRadius);
+        AuraGlow.CornerRadius = new CornerRadius(targetRadius);
     }
 
     // =========================================================================
@@ -612,6 +623,26 @@ public partial class MainWindow : Window
     // =========================================================================
     // MOUSE HOVER & CONTEXT MENU
     // =========================================================================
+    private void Pill_MouseEnter(object sender, MouseEventArgs e)
+    {
+        _autoCollapseTimer.Stop();
+        if (!_isExpanded)
+        {
+            _hoverTimer.Start();
+        }
+    }
+
+    private void Pill_MouseLeave(object sender, MouseEventArgs e)
+    {
+        _hoverTimer.Stop();
+        if (_isExpanded)
+        {
+            _autoCollapseTimer.Stop();
+            _autoCollapseTimer.Interval = TimeSpan.FromMilliseconds(500);
+            _autoCollapseTimer.Start();
+        }
+    }
+
     private void Window_MouseEnter(object sender, MouseEventArgs e)
     {
         _autoCollapseTimer.Stop();
