@@ -153,15 +153,33 @@ public class MediaService
             await _currentSession.TryTogglePlayPauseAsync();
     }
 
+    public Task TogglePlayPauseAsync() => PlayPauseAsync();
+
     public async Task NextTrackAsync()
     {
         if (_currentSession != null)
             await _currentSession.TrySkipNextAsync();
     }
 
+    public Task NextAsync() => NextTrackAsync();
+
     public async Task PreviousTrackAsync()
     {
         if (_currentSession != null)
             await _currentSession.TrySkipPreviousAsync();
+    }
+
+    public Task PreviousAsync() => PreviousTrackAsync();
+
+    public async Task SetPositionAsync(TimeSpan position)
+    {
+        if (_currentSession != null)
+        {
+            try
+            {
+                await _currentSession.TryChangePlaybackPositionAsync(position.Ticks);
+            }
+            catch { }
+        }
     }
 }
