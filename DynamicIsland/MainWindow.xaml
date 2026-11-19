@@ -178,13 +178,11 @@
                 <RowDefinition Height="Auto" />
               </Grid.RowDefinitions>
 
-              <ProgressBar x:Name="PlaybackProgress" Height="4" Maximum="100" Value="0"
-                           Foreground="{StaticResource TextPrimaryBrush}" Background="{StaticResource GlassSurfaceHoverBrush}"
-                           BorderThickness="0">
-                <ProgressBar.Resources>
-                  <Style TargetType="Border"><Setter Property="CornerRadius" Value="2" /></Style>
-                </ProgressBar.Resources>
-              </ProgressBar>
+              <Slider x:Name="PlaybackProgress" Style="{StaticResource AppleScrubberSlider}"
+                      Maximum="100" Value="0"
+                      PreviewMouseDown="PlaybackProgress_PreviewMouseDown"
+                      PreviewMouseUp="PlaybackProgress_PreviewMouseUp"
+                      ValueChanged="PlaybackProgress_ValueChanged" />
 
               <Grid Grid.Row="1" Margin="0,4,0,0">
                 <TextBlock x:Name="TextElapsed" Text="0:00" FontSize="10" FontWeight="Medium"

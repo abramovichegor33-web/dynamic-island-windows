@@ -37,6 +37,7 @@ public partial class MainWindow : Window
     private TimeSpan _currentDuration = TimeSpan.Zero;
     private bool _isPlaying;
     private bool _isUpdatingVolumeUi;
+    private bool _isScrubbing;
 
     public ObservableCollection<DroppedFileItem> ShelfFiles { get; } = [];
 
@@ -322,16 +323,49 @@ public partial class MainWindow : Window
     private void UpdateProgressUi()
     {
         TextElapsed.Text = FormatTime(_currentPosition);
-        TextTotal.Text = FormatTime(_currentDuration);
 
-        if (_currentDuration.TotalSeconds > 0)
+        if (_currentDuration > TimeSpan.Zero)
         {
-            double pct = (_currentPosition.TotalSeconds / _currentDuration.TotalSeconds) * 100.0;
-            PlaybackProgress.Value = Math.Clamp(pct, 0.0, 100.0);
+            var remaining = _currentDuration - _currentPosition;
+            if (remaining < TimeSpan.Zero) remaining = TimeSpan.Zero;
+            TextTotal.Text = $"-{FormatTime(remaining)}";
+
+            if (!_isScrubbing)
+            {
+                double pct = (_currentPosition.TotalSeconds / _currentDuration.TotalSeconds) * 100.0;
+                PlaybackProgress.Value = Math.Clamp(pct, 0.0, 100.0);
+            }
         }
         else
         {
-            PlaybackProgress.Value = 0;
+            TextTotal.Text = "0:00";
+            if (!_isScrubbing)
+            {
+                PlaybackProgress.Value = 0;
+            }
+        }
+    }
+
+    private void PlaybackProgress_PreviewMouseDown(object sender, MouseButtonEventArgs e)
+    {
+        _isScrubbing = true;
+    }
+
+    private void PlaybackProgress_PreviewMouseUp(object sender, MouseButtonEventArgs e)
+    {
+        _isScrubbing = false;
+    }
+
+    private void PlaybackProgress_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_isScrubbing && _currentDuration > TimeSpan.Zero)
+        {
+            double sec = (_currentDuration.TotalSeconds * e.NewValue) / 100.0;
+            _currentPosition = TimeSpan.FromSeconds(sec);
+            TextElapsed.Text = FormatTime(_currentPosition);
+            var remaining = _currentDuration - _currentPosition;
+            if (remaining < TimeSpan.Zero) remaining = TimeSpan.Zero;
+            TextTotal.Text = $"-{FormatTime(remaining)}";
         }
     }
 
@@ -600,9 +634,18 @@ public partial class MainWindow : Window
 
     private void Window_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
-        if (e.ClickCount == 1)
+        if (e.LeftButton == MouseButtonState.Pressed)
         {
-            if (!_isExpanded) ExpandIsland();
+            if (Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl) || Keyboard.IsKeyDown(Key.LeftAlt))
+            {
+                DragMove();
+                return;
+            }
+
+            if (!_isExpanded)
+            {
+                ExpandIsland();
+            }
         }
     }
 
