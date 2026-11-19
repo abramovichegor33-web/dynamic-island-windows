@@ -18,8 +18,8 @@ public sealed class GeminiLiveVoice : IAsyncDisposable
     private readonly SemaphoreSlim _sendLock = new(1, 1);
     private readonly object _playbackSync = new();
     private ClientWebSocket? _socket;
-    private WaveIn? _microphone;
-    private WaveOut? _speaker;
+    private WaveInEvent? _microphone;
+    private WaveOutEvent? _speaker;
     private BufferedWaveProvider? _playback;
     private float _outputVolume = 1;
     private Task? _receiver;
@@ -146,12 +146,12 @@ public sealed class GeminiLiveVoice : IAsyncDisposable
         {
             DiscardOnBufferOverflow = false,
         };
-        _speaker = new WaveOut();
+        _speaker = new WaveOutEvent();
         _speaker.Volume = _outputVolume;
         _speaker.Init(_playback);
         _speaker.Play();
 
-        _microphone = new WaveIn
+        _microphone = new WaveInEvent
         {
             WaveFormat = new WaveFormat(16_000, 16, 1),
             BufferMilliseconds = 64,
