@@ -140,10 +140,9 @@ public sealed class GeminiLiveVoice : IAsyncDisposable
             }
         }
 
-        _playback = new BufferedWaveProvider(
-            new WaveFormat(24_000, 16, 1),
-            TimeSpan.FromMinutes(2))
+        _playback = new BufferedWaveProvider(new WaveFormat(24_000, 16, 1))
         {
+            BufferDuration = TimeSpan.FromMinutes(2),
             DiscardOnBufferOverflow = false,
         };
         _speaker = new WaveOutEvent();
