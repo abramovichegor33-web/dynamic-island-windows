@@ -1,9 +1,9 @@
-using System.Collections.ObjectModel;
+using System;
 using System.Diagnostics;
-using System.Globalization;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
@@ -15,12 +15,6 @@ using DynamicIsland.Views;
 
 namespace DynamicIsland;
 
-public class DroppedFileItem
-{
-    public string Path { get; set; } = "";
-    public string Name => System.IO.Path.GetFileName(Path);
-}
-
 public partial class MainWindow : Window
 {
     private bool _isExpanded;
@@ -28,55 +22,42 @@ public partial class MainWindow : Window
     private readonly DispatcherTimer _autoCollapseTimer;
     private readonly DispatcherTimer _progressTimer;
     private readonly DispatcherTimer _visualizerTimer;
-    private readonly DispatcherTimer _clockTimer;
-    private readonly DispatcherTimer _stopwatchTimer;
-    private readonly Stopwatch _stopwatch = new();
     private readonly Random _rand = new();
 
     private TimeSpan _currentPosition = TimeSpan.Zero;
     private TimeSpan _currentDuration = TimeSpan.Zero;
     private bool _isPlaying;
-    private bool _isUpdatingVolumeUi;
     private bool _isScrubbing;
-
-    public ObservableCollection<DroppedFileItem> ShelfFiles { get; } = [];
 
     public MainWindow()
     {
         InitializeComponent();
 
-        ListFiles.ItemsSource = ShelfFiles;
-
         _hoverTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(120) };
         _hoverTimer.Tick += (_, _) =>
         {
             _hoverTimer.Stop();
-            ExpandIsland();
+            if (ConfigService.Instance.Config.ExpandOnHover)
+            {
+                ExpandIsland();
+            }
         };
 
         _autoCollapseTimer = new DispatcherTimer();
         _autoCollapseTimer.Tick += (_, _) =>
         {
             _autoCollapseTimer.Stop();
-            if (!IsMouseOver) CollapseIsland();
+            if (!IsMouseOver && _isExpanded)
+            {
+                CollapseIsland();
+            }
         };
 
         _progressTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
         _progressTimer.Tick += ProgressTimer_Tick;
 
-        _visualizerTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(100) };
+        _visualizerTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(90) };
         _visualizerTimer.Tick += VisualizerTimer_Tick;
-
-        _clockTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
-        _clockTimer.Tick += (_, _) => UpdateClock();
-        _clockTimer.Start();
-
-        _stopwatchTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(80) };
-        _stopwatchTimer.Tick += (_, _) =>
-        {
-            var ts = _stopwatch.Elapsed;
-            TextStopwatch.Text = $"{ts.Minutes:00}:{ts.Seconds:00}.{ts.Milliseconds / 10:00}";
-        };
 
         Loaded += MainWindow_Loaded;
     }
@@ -86,44 +67,14 @@ public partial class MainWindow : Window
         try
         {
             ApplyInitialSizing();
-            UpdateClock();
 
             // Subscribe to Media events
             MediaService.Instance.TrackChanged += OnTrackChanged;
             MediaService.Instance.PlaybackStateChanged += OnPlaybackStateChanged;
             UpdateMediaUi(MediaService.Instance.CurrentTrack);
 
-            // Subscribe to Volume events
-            VolumeService.Instance.VolumeChanged += (vol, muted) =>
-            {
-                Dispatcher.Invoke(() =>
-                {
-                    UpdateVolumeUi(vol, muted);
-                    if (!_isExpanded)
-                    {
-                        SwitchToTab(TabSound);
-                        TriggerEventExpansion(2.5);
-                    }
-                });
-            };
-            UpdateVolumeUi(VolumeService.Instance.CurrentVolume, VolumeService.Instance.IsMuted);
-
-            // Subscribe to Weather events
-            WeatherService.Instance.WeatherUpdated += data =>
-            {
-                Dispatcher.Invoke(() => UpdateWeatherUi(data));
-            };
-            if (WeatherService.Instance.CurrentWeather != null)
-            {
-                UpdateWeatherUi(WeatherService.Instance.CurrentWeather);
-            }
-
-            // Subscribe to Stats events
-            SystemStatsService.Instance.StatsUpdated += stats =>
-            {
-                Dispatcher.Invoke(() => UpdateStatsUi(stats));
-            };
-            UpdateStatsUi(SystemStatsService.Instance.CurrentStats);
+            // Subscribe to Config events
+            ConfigService.Instance.ConfigChanged += OnConfigChanged;
 
             Recenter();
         }
@@ -136,55 +87,48 @@ public partial class MainWindow : Window
     private void ApplyInitialSizing()
     {
         Width = 480;
-        Height = 230;
+        Height = 250;
+
         IslandPill.Width = 216;
         IslandPill.Height = 38;
         IslandPill.CornerRadius = new CornerRadius(19);
+
         AuraGlow.Width = 216;
         AuraGlow.Height = 38;
         AuraGlow.CornerRadius = new CornerRadius(19);
+
         CompactContainer.Visibility = Visibility.Visible;
         ExpandedContainer.Visibility = Visibility.Collapsed;
+
+        ApplyThemeVisuals();
     }
 
     public void Recenter()
     {
-        double screenW = SystemParameters.PrimaryScreenWidth;
-        Top = 0;
-        Left = (screenW - Width) / 2;
+        var screenW = SystemParameters.PrimaryScreenWidth;
+        Left = (screenW - Width) / 2.0;
+        Top = ConfigService.Instance.Config.TopOffset;
     }
 
-    // =========================================================================
-    // NAVIGATION & TAB SWITCHING
-    // =========================================================================
-    private void Tab_Checked(object sender, RoutedEventArgs e)
+    private void OnConfigChanged(AppConfig config)
     {
-        if (ModuleMedia == null) return;
-
-        ModuleMedia.Visibility = TabMedia.IsChecked == true ? Visibility.Visible : Visibility.Collapsed;
-        ModuleSound.Visibility = TabSound.IsChecked == true ? Visibility.Visible : Visibility.Collapsed;
-        ModuleClock.Visibility = TabClock.IsChecked == true ? Visibility.Visible : Visibility.Collapsed;
-        ModuleWeather.Visibility = TabWeather.IsChecked == true ? Visibility.Visible : Visibility.Collapsed;
-        ModulePC.Visibility = TabPC.IsChecked == true ? Visibility.Visible : Visibility.Collapsed;
-        ModuleShelf.Visibility = TabShelf.IsChecked == true ? Visibility.Visible : Visibility.Collapsed;
+        Dispatcher.Invoke(() =>
+        {
+            ApplyThemeVisuals();
+            Recenter();
+        });
     }
 
-    private void SwitchToTab(RadioButton tab)
+    private void ApplyThemeVisuals()
     {
-        tab.IsChecked = true;
+        var config = ConfigService.Instance.Config;
+        PillShadow.Opacity = config.ShowShadow ? 0.45 : 0.0;
+        AuraGlow.Visibility = config.CustomTheme.EnableAuraGlow ? Visibility.Visible : Visibility.Collapsed;
     }
 
     // =========================================================================
     // EXPAND & COLLAPSE (CUBIC SMOOTH FLUID MORPHING)
     // =========================================================================
-    private void TriggerEventExpansion(double durationSeconds)
-    {
-        ExpandIsland();
-        _autoCollapseTimer.Stop();
-        _autoCollapseTimer.Interval = TimeSpan.FromSeconds(durationSeconds);
-        _autoCollapseTimer.Start();
-    }
-
     private void ExpandIsland()
     {
         if (_isExpanded) return;
@@ -196,12 +140,12 @@ public partial class MainWindow : Window
 
         var fadeIn = new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(220))
         {
-            BeginTime = TimeSpan.FromMilliseconds(80),
+            BeginTime = TimeSpan.FromMilliseconds(70),
             EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
         };
         ExpandedContainer.BeginAnimation(OpacityProperty, fadeIn);
 
-        AnimateMorph(targetPillW: 444, targetPillH: 192, targetRadius: 34);
+        AnimateMorph(targetPillW: 430, targetPillH: 186, targetRadius: 36);
     }
 
     private void CollapseIsland()
@@ -225,7 +169,7 @@ public partial class MainWindow : Window
 
     private void AnimateMorph(double targetPillW, double targetPillH, double targetRadius)
     {
-        var duration = TimeSpan.FromMilliseconds(340);
+        var duration = TimeSpan.FromMilliseconds(320);
         var ease = new CubicEase { EasingMode = EasingMode.EaseOut };
 
         var wAnim = new DoubleAnimation(targetPillW, duration) { EasingFunction = ease };
@@ -249,12 +193,44 @@ public partial class MainWindow : Window
         Dispatcher.Invoke(() =>
         {
             UpdateMediaUi(track);
-            if (track.IsPlaying && !string.IsNullOrWhiteSpace(track.Title) && !_isExpanded)
+            // Quick event preview if compact
+            if (!_isExpanded && track.IsPlaying)
             {
-                SwitchToTab(TabMedia);
-                TriggerEventExpansion(3.0);
+                // Smooth aura blink if configured
             }
         });
+    }
+
+    private void UpdateMediaUi(MediaTrackInfo track)
+    {
+        bool hasTitle = !string.IsNullOrWhiteSpace(track.Title);
+
+        CompactTitle.Text = hasTitle ? track.Title : "Музыка не играет";
+        CompactArtist.Text = hasTitle ? (string.IsNullOrEmpty(track.Artist) ? "—" : track.Artist) : "Включите трек";
+
+        ExpandedTitle.Text = hasTitle ? track.Title : "Ничего не воспроизводится";
+        ExpandedArtist.Text = hasTitle ? (string.IsNullOrEmpty(track.Artist) ? "—" : track.Artist) : "Запустите Spotify, Яндекс или браузер";
+
+        if (track.AlbumArt != null)
+        {
+            CompactArt.Source = track.AlbumArt;
+            ExpandedArt.Source = track.AlbumArt;
+            CompactArt.Visibility = Visibility.Visible;
+            ExpandedArt.Visibility = Visibility.Visible;
+        }
+        else
+        {
+            CompactArt.Source = null;
+            ExpandedArt.Source = null;
+            CompactArt.Visibility = Visibility.Collapsed;
+            ExpandedArt.Visibility = Visibility.Collapsed;
+        }
+
+        _currentPosition = track.Position;
+        _currentDuration = track.Duration;
+
+        UpdateProgressUi();
+        OnPlaybackStateChanged(track.IsPlaying);
     }
 
     private void OnPlaybackStateChanged(bool isPlaying)
@@ -262,73 +238,69 @@ public partial class MainWindow : Window
         Dispatcher.Invoke(() =>
         {
             _isPlaying = isPlaying;
-            UpdatePlayPauseIcon(isPlaying);
+            var geom = (StreamGeometry)FindResource(isPlaying ? "PauseGeometry" : "PlayGeometry");
+            IconPlayPause.Data = geom;
+            // Visual optical centering offset: triangle play needs +2px right offset
+            IconPlayPause.Margin = isPlaying ? new Thickness(0) : new Thickness(2, 0, 0, 0);
+
             if (isPlaying)
             {
-                if (!_progressTimer.IsEnabled) _progressTimer.Start();
-                if (!_visualizerTimer.IsEnabled) _visualizerTimer.Start();
+                _progressTimer.Start();
+                _visualizerTimer.Start();
+                CompactVisualizer.Opacity = 1.0;
+                ExpVisualizer.Opacity = 1.0;
             }
             else
             {
+                _progressTimer.Stop();
                 _visualizerTimer.Stop();
-                ResetVisualizer();
+                CompactVisualizer.Opacity = 0.35;
+                ExpVisualizer.Opacity = 0.35;
+
+                // Resting visualizer bar heights
+                Bar1.Height = 5;
+                Bar2.Height = 8;
+                Bar3.Height = 5;
+                Bar4.Height = 7;
+
+                ExpBar1.Height = 8;
+                ExpBar2.Height = 12;
+                ExpBar3.Height = 6;
+                ExpBar4.Height = 10;
+                ExpBar5.Height = 7;
             }
         });
     }
 
-    private void UpdateMediaUi(MediaTrackInfo track)
+    private void VisualizerTimer_Tick(object? sender, EventArgs e)
     {
-        string title = string.IsNullOrWhiteSpace(track.Title) ? "Музыка не играет" : track.Title;
-        string artist = string.IsNullOrWhiteSpace(track.Artist) ? "Включите трек" : track.Artist;
+        if (!_isPlaying) return;
 
-        CompactTitle.Text = title;
-        CompactArtist.Text = artist;
-        ExpandedTitle.Text = title;
-        ExpandedArtist.Text = artist;
+        // Compact 4 bars
+        Bar1.Height = _rand.Next(4, 12);
+        Bar2.Height = _rand.Next(8, 20);
+        Bar3.Height = _rand.Next(4, 15);
+        Bar4.Height = _rand.Next(6, 17);
 
-        CompactArt.Source = track.AlbumArt;
-        ExpandedArt.Source = track.AlbumArt;
-
-        _isPlaying = track.IsPlaying;
-        UpdatePlayPauseIcon(_isPlaying);
-
-        _currentPosition = track.Position;
-        _currentDuration = track.Duration;
-        UpdateProgressUi();
-
-        if (_isPlaying)
-        {
-            if (!_progressTimer.IsEnabled) _progressTimer.Start();
-            if (!_visualizerTimer.IsEnabled) _visualizerTimer.Start();
-        }
-        else
-        {
-            _visualizerTimer.Stop();
-            ResetVisualizer();
-        }
-    }
-
-    private void UpdatePlayPauseIcon(bool isPlaying)
-    {
-        var geomKey = isPlaying ? "PauseGeometry" : "PlayGeometry";
-        if (TryFindResource(geomKey) is Geometry geom)
-        {
-            IconPlayPause.Data = geom;
-            IconPlayPause.Margin = isPlaying ? new Thickness(0) : new Thickness(2, 0, 0, 0);
-        }
+        // Expanded 5 bars
+        ExpBar1.Height = _rand.Next(6, 18);
+        ExpBar2.Height = _rand.Next(12, 26);
+        ExpBar3.Height = _rand.Next(6, 20);
+        ExpBar4.Height = _rand.Next(10, 24);
+        ExpBar5.Height = _rand.Next(7, 19);
     }
 
     private void ProgressTimer_Tick(object? sender, EventArgs e)
     {
-        if (!_isPlaying) return;
-
-        _currentPosition = _currentPosition.Add(TimeSpan.FromSeconds(1));
-        if (_currentDuration > TimeSpan.Zero && _currentPosition > _currentDuration)
+        if (_isPlaying && !_isScrubbing)
         {
-            _currentPosition = _currentDuration;
+            _currentPosition += TimeSpan.FromSeconds(1);
+            if (_currentDuration > TimeSpan.Zero && _currentPosition > _currentDuration)
+            {
+                _currentPosition = _currentDuration;
+            }
+            UpdateProgressUi();
         }
-
-        UpdateProgressUi();
     }
 
     private void UpdateProgressUi()
@@ -364,7 +336,17 @@ public partial class MainWindow : Window
 
     private void PlaybackProgress_PreviewMouseUp(object sender, MouseButtonEventArgs e)
     {
-        _isScrubbing = false;
+        if (_isScrubbing)
+        {
+            _isScrubbing = false;
+            if (_currentDuration > TimeSpan.Zero)
+            {
+                double sec = (_currentDuration.TotalSeconds * PlaybackProgress.Value) / 100.0;
+                _currentPosition = TimeSpan.FromSeconds(sec);
+                UpdateProgressUi();
+                _ = MediaService.Instance.SetPositionAsync(_currentPosition);
+            }
+        }
     }
 
     private void PlaybackProgress_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
@@ -382,251 +364,35 @@ public partial class MainWindow : Window
 
     private static string FormatTime(TimeSpan ts)
     {
-        if (ts.TotalHours >= 1) return ts.ToString(@"h\:mm\:ss");
-        return ts.ToString(@"m\:ss");
-    }
-
-    private void VisualizerTimer_Tick(object? sender, EventArgs e)
-    {
-        if (!_isPlaying) return;
-
-        Bar1.Height = _rand.Next(4, 12);
-        Bar2.Height = _rand.Next(6, 16);
-        Bar3.Height = _rand.Next(3, 10);
-        Bar4.Height = _rand.Next(5, 14);
-
-        ExpBar1.Height = _rand.Next(6, 18);
-        ExpBar2.Height = _rand.Next(10, 24);
-        ExpBar3.Height = _rand.Next(4, 14);
-        ExpBar4.Height = _rand.Next(8, 22);
-        ExpBar5.Height = _rand.Next(5, 16);
-    }
-
-    private void ResetVisualizer()
-    {
-        Bar1.Height = 4; Bar2.Height = 6; Bar3.Height = 3; Bar4.Height = 5;
-        ExpBar1.Height = 6; ExpBar2.Height = 8; ExpBar3.Height = 5; ExpBar4.Height = 7; ExpBar5.Height = 6;
+        if (ts.TotalHours >= 1)
+        {
+            return $"{(int)ts.TotalHours}:{ts.Minutes:D2}:{ts.Seconds:D2}";
+        }
+        return $"{ts.Minutes}:{ts.Seconds:D2}";
     }
 
     private async void BtnPlayPause_Click(object sender, RoutedEventArgs e)
     {
-        await MediaService.Instance.PlayPauseAsync();
+        await MediaService.Instance.TogglePlayPauseAsync();
     }
 
     private async void BtnPrev_Click(object sender, RoutedEventArgs e)
     {
-        await MediaService.Instance.PreviousTrackAsync();
+        await MediaService.Instance.PreviousAsync();
     }
 
     private async void BtnNext_Click(object sender, RoutedEventArgs e)
     {
-        await MediaService.Instance.NextTrackAsync();
+        await MediaService.Instance.NextAsync();
     }
 
     // =========================================================================
-    // VOLUME MODULE
-    // =========================================================================
-    private void UpdateVolumeUi(float vol, bool muted)
-    {
-        _isUpdatingVolumeUi = true;
-        try
-        {
-            int percent = (int)Math.Round(vol * 100);
-            ExpPercent.Text = muted ? "Mute" : $"{percent}%";
-            TextMuteStatus.Text = muted ? "Звук выключен" : "Вывод звука активен";
-            ExpSlider.Value = percent;
-
-            var geomKey = muted ? "VolumeMuteGeometry" : (percent > 40 ? "VolumeWaveHighGeometry" : "VolumeSpeakerGeometry");
-            if (TryFindResource(geomKey) is Geometry geom)
-            {
-                IconVolumeSpeaker.Data = geom;
-            }
-        }
-        finally
-        {
-            _isUpdatingVolumeUi = false;
-        }
-    }
-
-    private void ExpSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
-    {
-        if (!_isUpdatingVolumeUi && IsLoaded)
-        {
-            VolumeService.Instance.SetVolume((float)(e.NewValue / 100.0));
-        }
-    }
-
-    private void BtnMute_Click(object sender, RoutedEventArgs e)
-    {
-        VolumeService.Instance.ToggleMute();
-    }
-
-    private void Preset_Click(object sender, RoutedEventArgs e)
-    {
-        if (sender is Button btn && btn.Tag is string tagStr && int.TryParse(tagStr, out int val))
-        {
-            VolumeService.Instance.SetVolume(val / 100f);
-        }
-    }
-
-    // =========================================================================
-    // CLOCK & STOPWATCH MODULE
-    // =========================================================================
-    private void UpdateClock()
-    {
-        var now = DateTime.Now;
-        var ru = new CultureInfo("ru-RU");
-
-        TextBigTime.Text = now.ToString("HH:mm:ss");
-        TextBigDate.Text = now.ToString("dddd, d MMMM yyyy", ru);
-    }
-
-    private void BtnSwStartPause_Click(object sender, RoutedEventArgs e)
-    {
-        if (_stopwatch.IsRunning)
-        {
-            _stopwatch.Stop();
-            _stopwatchTimer.Stop();
-            BtnSwStartPause.Content = "Старт";
-            BtnSwStartPause.Background = (Brush)FindResource("AccentGreenBrush");
-        }
-        else
-        {
-            _stopwatch.Start();
-            _stopwatchTimer.Start();
-            BtnSwStartPause.Content = "Пауза";
-            BtnSwStartPause.Background = (Brush)FindResource("AccentOrangeBrush");
-        }
-    }
-
-    private void BtnSwReset_Click(object sender, RoutedEventArgs e)
-    {
-        _stopwatch.Reset();
-        _stopwatchTimer.Stop();
-        TextStopwatch.Text = "00:00.0";
-        BtnSwStartPause.Content = "Старт";
-        BtnSwStartPause.Background = (Brush)FindResource("AccentGreenBrush");
-    }
-
-    // =========================================================================
-    // WEATHER MODULE
-    // =========================================================================
-    private void UpdateWeatherUi(WeatherData data)
-    {
-        string sign = data.Temperature > 0 ? "+" : "";
-        TextExpTemp.Text = $"{sign}{data.Temperature:0}°";
-        TextDesc.Text = data.Description;
-        TextCity.Text = $"{ConfigService.Instance.Config.WeatherCity} • {data.Description}";
-    }
-
-    private async void BtnRefresh_Click(object sender, RoutedEventArgs e)
-    {
-        BtnRefresh.IsEnabled = false;
-        await WeatherService.Instance.RefreshWeatherAsync(force: true);
-        BtnRefresh.IsEnabled = true;
-    }
-
-    // =========================================================================
-    // PC TELEMETRY MODULE
-    // =========================================================================
-    private void UpdateStatsUi(SystemStats stats)
-    {
-        TextExpCpu.Text = $"{stats.CpuPercent:0}%";
-        BarCpu.Value = stats.CpuPercent;
-
-        TextExpRam.Text = $"{stats.RamPercent:0}%";
-        BarRam.Value = stats.RamPercent;
-
-        if (stats.HasBattery)
-        {
-            LabelBattery.Text = stats.IsCharging ? "CHG" : "BAT";
-            TextExpBattery.Text = $"{stats.BatteryPercent}%";
-            BarBattery.Value = stats.BatteryPercent;
-        }
-        else
-        {
-            LabelBattery.Text = "PWR";
-            TextExpBattery.Text = "220V";
-            BarBattery.Value = 100;
-        }
-    }
-
-    // =========================================================================
-    // FILE SHELF MODULE (DRAG & DROP)
-    // =========================================================================
-    private void Window_DragEnter(object sender, DragEventArgs e)
-    {
-        if (e.Data.GetDataPresent(DataFormats.FileDrop))
-        {
-            e.Effects = DragDropEffects.Copy;
-            ExpandIsland();
-            SwitchToTab(TabShelf);
-        }
-    }
-
-    private void Window_Drop(object sender, DragEventArgs e)
-    {
-        if (e.Data.GetDataPresent(DataFormats.FileDrop))
-        {
-            if (e.Data.GetData(DataFormats.FileDrop) is string[] files)
-            {
-                foreach (var f in files)
-                {
-                    if (File.Exists(f) || Directory.Exists(f))
-                    {
-                        if (!ShelfFiles.Any(x => x.Path.Equals(f, StringComparison.OrdinalIgnoreCase)))
-                        {
-                            ShelfFiles.Add(new DroppedFileItem { Path = f });
-                        }
-                    }
-                }
-
-                DropPrompt.Visibility = ShelfFiles.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
-                ListFiles.Visibility = ShelfFiles.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
-            }
-        }
-    }
-
-    private void BtnClearAll_Click(object sender, RoutedEventArgs e)
-    {
-        ShelfFiles.Clear();
-        DropPrompt.Visibility = Visibility.Visible;
-        ListFiles.Visibility = Visibility.Collapsed;
-    }
-
-    private void BtnCopyFile_Click(object sender, RoutedEventArgs e)
-    {
-        if (sender is Button btn && btn.Tag is string path && File.Exists(path))
-        {
-            var coll = new System.Collections.Specialized.StringCollection { path };
-            Clipboard.SetFileDropList(coll);
-        }
-    }
-
-    private void BtnOpenFile_Click(object sender, RoutedEventArgs e)
-    {
-        if (sender is Button btn && btn.Tag is string path)
-        {
-            try
-            {
-                Process.Start(new ProcessStartInfo
-                {
-                    FileName = "explorer.exe",
-                    Arguments = $"/select,\"{path}\"",
-                    UseShellExecute = true
-                });
-            }
-            catch { }
-        }
-    }
-
-    // =========================================================================
-    // MOUSE HOVER & CONTEXT MENU
+    // MOUSE HOVER, WHEEL & CONTEXT MENU
     // =========================================================================
     private void Pill_MouseEnter(object sender, MouseEventArgs e)
     {
         _autoCollapseTimer.Stop();
-        if (!_isExpanded)
+        if (!_isExpanded && ConfigService.Instance.Config.ExpandOnHover)
         {
             _hoverTimer.Start();
         }
@@ -638,32 +404,12 @@ public partial class MainWindow : Window
         if (_isExpanded)
         {
             _autoCollapseTimer.Stop();
-            _autoCollapseTimer.Interval = TimeSpan.FromMilliseconds(500);
+            _autoCollapseTimer.Interval = TimeSpan.FromSeconds(ConfigService.Instance.Config.AutoCollapseSeconds > 0 ? ConfigService.Instance.Config.AutoCollapseSeconds : 2);
             _autoCollapseTimer.Start();
         }
     }
 
-    private void Window_MouseEnter(object sender, MouseEventArgs e)
-    {
-        _autoCollapseTimer.Stop();
-        if (!_isExpanded)
-        {
-            _hoverTimer.Start();
-        }
-    }
-
-    private void Window_MouseLeave(object sender, MouseEventArgs e)
-    {
-        _hoverTimer.Stop();
-        if (_isExpanded)
-        {
-            _autoCollapseTimer.Stop();
-            _autoCollapseTimer.Interval = TimeSpan.FromMilliseconds(500);
-            _autoCollapseTimer.Start();
-        }
-    }
-
-    private void Window_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    private void Pill_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
         if (e.LeftButton == MouseButtonState.Pressed)
         {
@@ -677,7 +423,36 @@ public partial class MainWindow : Window
             {
                 ExpandIsland();
             }
+            else
+            {
+                // Smooth collapse if user clicks directly on island background
+                if (e.OriginalSource is DependencyObject dep && !IsInteractiveChild(dep))
+                {
+                    CollapseIsland();
+                }
+            }
         }
+    }
+
+    private static bool IsInteractiveChild(DependencyObject dep)
+    {
+        DependencyObject? cur = dep;
+        while (cur != null)
+        {
+            if (cur is Button || cur is Slider || cur is RepeatButton || cur is Thumb)
+                return true;
+            cur = VisualTreeHelper.GetParent(cur);
+        }
+        return false;
+    }
+
+    private void Pill_MouseWheel(object sender, MouseWheelEventArgs e)
+    {
+        // Smoothly adjust master volume with mouse wheel over island
+        float step = e.Delta > 0 ? 0.02f : -0.02f;
+        float newVol = Math.Clamp(VolumeService.Instance.CurrentVolume + step, 0f, 1f);
+        VolumeService.Instance.SetVolume(newVol);
+        e.Handled = true;
     }
 
     private void MenuSettings_Click(object sender, RoutedEventArgs e)

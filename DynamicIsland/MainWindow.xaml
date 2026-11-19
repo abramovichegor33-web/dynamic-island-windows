@@ -4,28 +4,25 @@
         Title="Dynamic Island"
         WindowStyle="None" AllowsTransparency="True" Background="{x:Null}"
         Topmost="True" ShowInTaskbar="False" ResizeMode="NoResize"
-        Width="480" Height="230"
-        MouseEnter="Window_MouseEnter" MouseLeave="Window_MouseLeave"
-        MouseLeftButtonDown="Window_MouseLeftButtonDown"
-        AllowDrop="True" Drop="Window_Drop" DragEnter="Window_DragEnter"
-        FontFamily="Segoe UI Variable Text, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif"
+        Width="480" Height="250"
+        FontFamily="Segoe UI Variable Display, Segoe UI Variable Text, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif"
         TextOptions.TextFormattingMode="Ideal"
         RenderOptions.BitmapScalingMode="HighQuality">
 
   <Window.ContextMenu>
     <ContextMenu Background="{StaticResource GlassSurfaceBrush}" Foreground="{StaticResource TextPrimaryBrush}"
                  BorderBrush="{StaticResource GlassSurfaceHoverBrush}" BorderThickness="1">
-      <MenuItem Header="⚙️ Настройки..." Click="MenuSettings_Click" />
+      <MenuItem Header="⚙️ Настройки Dynamic Island..." Click="MenuSettings_Click" />
       <MenuItem Header="🎯 Центрировать на экране" Click="MenuRecenter_Click" />
       <Separator Background="{StaticResource GlassSurfaceHoverBrush}" />
-      <MenuItem Header="❌ Выход" Click="MenuExit_Click" />
+      <MenuItem Header="❌ Закрыть" Click="MenuExit_Click" />
     </ContextMenu>
   </Window.ContextMenu>
 
-  <!-- Canvas Root (Null Background passes clicks through) -->
+  <!-- Canvas Root (Null Background passes clicks through to desktop windows) -->
   <Grid x:Name="RootGrid" Background="{x:Null}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
 
-    <!-- Aura Glow (Conditional) -->
+    <!-- Aura Glow (Conditional subtle backlight) -->
     <Border x:Name="AuraGlow"
             Width="216" Height="38"
             CornerRadius="19"
@@ -38,12 +35,14 @@
       </Border.Effect>
     </Border>
 
-    <!-- Main Island Capsule (Hardware-Accelerated In-Place Morphing) -->
+    <!-- Main Island Capsule (Hardware-Accelerated In-Place GPU Morphing) -->
     <Border x:Name="IslandPill"
             Width="216" Height="38"
             HorizontalAlignment="Center" VerticalAlignment="Top"
             Margin="0,10,0,0"
             MouseEnter="Pill_MouseEnter" MouseLeave="Pill_MouseLeave"
+            MouseLeftButtonDown="Pill_MouseLeftButtonDown"
+            MouseWheel="Pill_MouseWheel"
             Background="{StaticResource IslandPureBlackBrush}"
             BorderBrush="{StaticResource IslandRimBorderBrush}"
             BorderThickness="1"
@@ -52,25 +51,25 @@
       
       <!-- Apple Diffused Ambient Shadow -->
       <Border.Effect>
-        <DropShadowEffect x:Name="PillShadow" BlurRadius="26" ShadowDepth="4" Opacity="0.5" Color="Black" Direction="270" />
+        <DropShadowEffect x:Name="PillShadow" BlurRadius="26" ShadowDepth="4" Opacity="0.45" Color="Black" Direction="270" />
       </Border.Effect>
 
       <Grid>
         <!-- ================================================================= -->
-        <!-- 1. COMPACT PILL STATE (Height=38, Width=216)                      -->
+        <!-- 1. COMPACT PILL STATE (Height=38, Width=216, CornerRadius=19)     -->
         <!-- ================================================================= -->
-        <Grid x:Name="CompactContainer" Height="38" VerticalAlignment="Center" Margin="6,0,8,0">
+        <Grid x:Name="CompactContainer" Height="38" VerticalAlignment="Center" Margin="7,0,10,0">
           <Grid.ColumnDefinitions>
             <ColumnDefinition Width="Auto" />
             <ColumnDefinition Width="*" />
             <ColumnDefinition Width="Auto" />
           </Grid.ColumnDefinitions>
 
-          <!-- Left: Mini Album Cover with Apple Fallback -->
+          <!-- Left: Mini Artwork (24x24) with Apple Music Fallback -->
           <Border Width="24" Height="24" CornerRadius="6" Background="{StaticResource GlassSurfaceBrush}"
-                  BorderBrush="#25FFFFFF" BorderThickness="1" ClipToBounds="True" Margin="2,0,8,0">
+                  BorderBrush="#25FFFFFF" BorderThickness="0.8" ClipToBounds="True" Margin="0,0,8,0">
             <Grid>
-              <Border Background="#222225">
+              <Border Background="#252528">
                 <Viewbox Width="12" Height="12" Stretch="Uniform">
                   <Path Data="{StaticResource MusicNoteGeometry}" Fill="{StaticResource TextSecondaryBrush}" />
                 </Viewbox>
@@ -79,7 +78,7 @@
             </Grid>
           </Border>
 
-          <!-- Center: Marquee / Truncated Track Title & Artist -->
+          <!-- Center: Truncated Track Title & Artist -->
           <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="0,0,8,0">
             <TextBlock x:Name="CompactTitle" Text="Музыка не играет" FontSize="11.5" FontWeight="SemiBold"
                        Foreground="{StaticResource TextPrimaryBrush}" TextTrimming="CharacterEllipsis" />
@@ -87,8 +86,8 @@
                        Foreground="{StaticResource TextSecondaryBrush}" TextTrimming="CharacterEllipsis" Margin="0,0.5,0,0" />
           </StackPanel>
 
-          <!-- Right: 4-Bar Animated Audio Visualizer -->
-          <StackPanel x:Name="CompactVisualizer" Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,4,0">
+          <!-- Right: 4-Bar Animated Equalizer -->
+          <StackPanel x:Name="CompactVisualizer" Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,2,0">
             <Border x:Name="Bar1" Width="2" Height="8" Background="{StaticResource AccentGreenBrush}" CornerRadius="1" Margin="1,0" />
             <Border x:Name="Bar2" Width="2" Height="14" Background="{StaticResource AccentGreenBrush}" CornerRadius="1" Margin="1,0" />
             <Border x:Name="Bar3" Width="2" Height="6" Background="{StaticResource AccentGreenBrush}" CornerRadius="1" Margin="1,0" />
@@ -97,375 +96,115 @@
         </Grid>
 
         <!-- ================================================================= -->
-        <!-- 2. EXPANDED VIEW STATE (Height=192, Width=444)                    -->
+        <!-- 2. EXPANDED VIEW STATE (Pure Apple iOS 18 Media Player)           -->
+        <!-- Width=430, Height=186, CornerRadius=36                            -->
         <!-- ================================================================= -->
-        <Grid x:Name="ExpandedContainer" Visibility="Collapsed" Margin="16,10,16,12">
+        <Grid x:Name="ExpandedContainer" Visibility="Collapsed" Margin="22,16,22,16">
           <Grid.RowDefinitions>
-            <!-- Top Segmented Navigation Bar -->
-            <RowDefinition Height="32" />
-            <!-- Active Module Content -->
-            <RowDefinition Height="*" />
+            <!-- Row 0: Artwork + Titles + Live Waveform (Height: 56) -->
+            <RowDefinition Height="Auto" />
+            <!-- Row 1: Scrubber Slider + Timestamps (Height: 32) -->
+            <RowDefinition Height="Auto" />
+            <!-- Row 2: Playback Transport Controls (Height: 44) -->
+            <RowDefinition Height="Auto" />
           </Grid.RowDefinitions>
 
-          <!-- ==================== TOP NAVIGATION BAR ==================== -->
-          <Grid Grid.Row="0" Margin="0,0,0,10">
-            <!-- iOS Segmented Control (Pill container) -->
-            <Border Background="{StaticResource GlassSurfaceBrush}" CornerRadius="10" Padding="2"
-                    HorizontalAlignment="Left" VerticalAlignment="Center">
-              <StackPanel Orientation="Horizontal">
-                <RadioButton x:Name="TabMedia" Content="Медиа" Style="{StaticResource AppleSegmentedRadioButton}"
-                             IsChecked="True" Checked="Tab_Checked" />
-                <RadioButton x:Name="TabSound" Content="Звук" Style="{StaticResource AppleSegmentedRadioButton}"
-                             Checked="Tab_Checked" />
-                <RadioButton x:Name="TabClock" Content="Часы" Style="{StaticResource AppleSegmentedRadioButton}"
-                             Checked="Tab_Checked" />
-                <RadioButton x:Name="TabWeather" Content="Погода" Style="{StaticResource AppleSegmentedRadioButton}"
-                             Checked="Tab_Checked" />
-                <RadioButton x:Name="TabPC" Content="ПК" Style="{StaticResource AppleSegmentedRadioButton}"
-                             Checked="Tab_Checked" />
-                <RadioButton x:Name="TabShelf" Content="Полка" Style="{StaticResource AppleSegmentedRadioButton}"
-                             Checked="Tab_Checked" />
-              </StackPanel>
+          <!-- Row 0: Artwork + Titles + Live Waveform -->
+          <Grid Grid.Row="0">
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="Auto" />
+              <ColumnDefinition Width="*" />
+              <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <!-- 56x56 Album Artwork with Apple Music gradient fallback -->
+            <Border Width="56" Height="56" CornerRadius="13" Background="{StaticResource GlassSurfaceBrush}"
+                    BorderBrush="#25FFFFFF" BorderThickness="1" ClipToBounds="True" Margin="0,0,14,0">
+              <Border.Effect>
+                <DropShadowEffect BlurRadius="12" ShadowDepth="2" Opacity="0.35" Color="Black" />
+              </Border.Effect>
+              <Grid>
+                <!-- Fallback tile -->
+                <Border>
+                  <Border.Background>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                      <GradientStop Color="#FA233B" Offset="0.0" />
+                      <GradientStop Color="#FB5C74" Offset="1.0" />
+                    </LinearGradientBrush>
+                  </Border.Background>
+                  <Viewbox Width="26" Height="26" Stretch="Uniform">
+                    <Path Data="{StaticResource MusicNoteGeometry}" Fill="#FFFFFF" />
+                  </Viewbox>
+                </Border>
+                <Image x:Name="ExpandedArt" Stretch="UniformToFill" />
+              </Grid>
             </Border>
 
-            <!-- Right: Circular Settings Button -->
-            <Button x:Name="BtnSettings" Width="28" Height="28" Style="{StaticResource AppleIconButton}"
-                    HorizontalAlignment="Right" VerticalAlignment="Center" Click="MenuSettings_Click"
-                    ToolTip="Настройки Dynamic Island">
-              <Border Background="{StaticResource GlassSurfaceBrush}" CornerRadius="14" Width="28" Height="28">
-                <Viewbox Width="14" Height="14" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center">
-                  <Path Data="{StaticResource SettingsGearGeometry}" Fill="{StaticResource TextSecondaryBrush}" />
-                </Viewbox>
-              </Border>
-            </Button>
+            <!-- Track Details (Vertically centered with Artwork) -->
+            <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="0,0,12,0">
+              <TextBlock x:Name="ExpandedTitle" Text="Ничего не воспроизводится" FontSize="15.5" FontWeight="Bold"
+                         Foreground="{StaticResource TextPrimaryBrush}" TextTrimming="CharacterEllipsis" />
+              <TextBlock x:Name="ExpandedArtist" Text="Запустите Spotify, Яндекс или браузер" FontSize="12" FontWeight="Normal"
+                         Foreground="{StaticResource TextSecondaryBrush}" TextTrimming="CharacterEllipsis" Margin="0,3,0,0" />
+            </StackPanel>
+
+            <!-- 5-Bar Live Waveform Visualizer -->
+            <StackPanel x:Name="ExpVisualizer" Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+              <Border x:Name="ExpBar1" Width="3" Height="12" Background="{StaticResource AccentGreenBrush}" CornerRadius="1.5" Margin="1.5,0" />
+              <Border x:Name="ExpBar2" Width="3" Height="22" Background="{StaticResource AccentGreenBrush}" CornerRadius="1.5" Margin="1.5,0" />
+              <Border x:Name="ExpBar3" Width="3" Height="8" Background="{StaticResource AccentGreenBrush}" CornerRadius="1.5" Margin="1.5,0" />
+              <Border x:Name="ExpBar4" Width="3" Height="18" Background="{StaticResource AccentGreenBrush}" CornerRadius="1.5" Margin="1.5,0" />
+              <Border x:Name="ExpBar5" Width="3" Height="10" Background="{StaticResource AccentGreenBrush}" CornerRadius="1.5" Margin="1.5,0" />
+            </StackPanel>
           </Grid>
 
-          <!-- ==================== MODULE 1: MEDIA PLAYER ==================== -->
-          <Grid x:Name="ModuleMedia" Grid.Row="1">
+          <!-- Row 1: iOS Interactive Scrubber Slider + Timestamps -->
+          <Grid Grid.Row="1" Margin="0,14,0,0">
             <Grid.RowDefinitions>
-              <RowDefinition Height="Auto" />
               <RowDefinition Height="Auto" />
               <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
-            <!-- Row 0: Artwork + Titles + Live Waveform -->
-            <Grid Grid.Row="0" Margin="0,0,0,10">
-              <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="Auto" />
-              </Grid.ColumnDefinitions>
+            <Slider x:Name="PlaybackProgress" Style="{StaticResource AppleScrubberSlider}"
+                    Maximum="100" Value="0"
+                    PreviewMouseDown="PlaybackProgress_PreviewMouseDown"
+                    PreviewMouseUp="PlaybackProgress_PreviewMouseUp"
+                    ValueChanged="PlaybackProgress_ValueChanged" />
 
-              <!-- 64x64 Album Art with Apple Music Gradient Fallback -->
-              <Border Width="64" Height="64" CornerRadius="14" Background="{StaticResource GlassSurfaceBrush}"
-                      BorderBrush="#25FFFFFF" BorderThickness="1" ClipToBounds="True" Margin="0,0,14,0">
-                <Border.Effect>
-                  <DropShadowEffect BlurRadius="16" ShadowDepth="2" Opacity="0.4" Color="Black" />
-                </Border.Effect>
-                <Grid>
-                  <!-- Apple Music Fallback Tile -->
-                  <Border>
-                    <Border.Background>
-                      <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                        <GradientStop Color="#FA233B" Offset="0.0" />
-                        <GradientStop Color="#FB5C74" Offset="1.0" />
-                      </LinearGradientBrush>
-                    </Border.Background>
-                    <Viewbox Width="28" Height="28" Stretch="Uniform">
-                      <Path Data="{StaticResource MusicNoteGeometry}" Fill="#FFFFFF" />
-                    </Viewbox>
-                  </Border>
-                  <Image x:Name="ExpandedArt" Stretch="UniformToFill" />
-                </Grid>
-              </Border>
-
-              <!-- Track Details -->
-              <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="0,0,10,0">
-                <TextBlock x:Name="ExpandedTitle" Text="Ничего не воспроизводится" FontSize="15" FontWeight="Bold"
-                           Foreground="{StaticResource TextPrimaryBrush}" TextTrimming="CharacterEllipsis" />
-                <TextBlock x:Name="ExpandedArtist" Text="Запустите Spotify, Яндекс или браузер" FontSize="12"
-                           Foreground="{StaticResource TextSecondaryBrush}" TextTrimming="CharacterEllipsis" Margin="0,3,0,0" />
-              </StackPanel>
-
-              <!-- 5-Bar Live Waveform Visualizer -->
-              <StackPanel x:Name="ExpVisualizer" Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
-                <Border x:Name="ExpBar1" Width="3" Height="12" Background="{StaticResource AccentGreenBrush}" CornerRadius="1.5" Margin="1.5,0" />
-                <Border x:Name="ExpBar2" Width="3" Height="22" Background="{StaticResource AccentGreenBrush}" CornerRadius="1.5" Margin="1.5,0" />
-                <Border x:Name="ExpBar3" Width="3" Height="8" Background="{StaticResource AccentGreenBrush}" CornerRadius="1.5" Margin="1.5,0" />
-                <Border x:Name="ExpBar4" Width="3" Height="18" Background="{StaticResource AccentGreenBrush}" CornerRadius="1.5" Margin="1.5,0" />
-                <Border x:Name="ExpBar5" Width="3" Height="10" Background="{StaticResource AccentGreenBrush}" CornerRadius="1.5" Margin="1.5,0" />
-              </StackPanel>
+            <Grid Grid.Row="1" Margin="0,3,0,0">
+              <TextBlock x:Name="TextElapsed" Text="0:00" FontSize="10.5" FontWeight="Medium"
+                         Typography.NumeralAlignment="Tabular" Foreground="{StaticResource TextSecondaryBrush}" HorizontalAlignment="Left" />
+              <TextBlock x:Name="TextTotal" Text="0:00" FontSize="10.5" FontWeight="Medium"
+                         Typography.NumeralAlignment="Tabular" Foreground="{StaticResource TextSecondaryBrush}" HorizontalAlignment="Right" />
             </Grid>
-
-            <!-- Row 1: iOS Interactive Scrubber Slider + Countdown Timestamps -->
-            <Grid Grid.Row="1" Margin="0,0,0,8">
-              <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
-              </Grid.RowDefinitions>
-
-              <Slider x:Name="PlaybackProgress" Style="{StaticResource AppleScrubberSlider}"
-                      Maximum="100" Value="0"
-                      PreviewMouseDown="PlaybackProgress_PreviewMouseDown"
-                      PreviewMouseUp="PlaybackProgress_PreviewMouseUp"
-                      ValueChanged="PlaybackProgress_ValueChanged" />
-
-              <Grid Grid.Row="1" Margin="0,4,0,0">
-                <TextBlock x:Name="TextElapsed" Text="0:00" FontSize="10" FontWeight="Medium"
-                           Typography.NumeralAlignment="Tabular" Foreground="{StaticResource TextSecondaryBrush}" HorizontalAlignment="Left" />
-                <TextBlock x:Name="TextTotal" Text="0:00" FontSize="10" FontWeight="Medium"
-                           Typography.NumeralAlignment="Tabular" Foreground="{StaticResource TextSecondaryBrush}" HorizontalAlignment="Right" />
-              </Grid>
-            </Grid>
-
-            <!-- Row 2: Centered Transport Controls with Viewbox centering -->
-            <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
-              <!-- Previous Button -->
-              <Button x:Name="BtnPrev" Width="38" Height="38" Style="{StaticResource AppleIconButton}"
-                      Margin="12,0" Click="BtnPrev_Click">
-                <Viewbox Width="16" Height="16" Stretch="Uniform">
-                  <Path Data="{StaticResource PrevGeometry}" Fill="{StaticResource TextPrimaryBrush}" />
-                </Viewbox>
-              </Button>
-
-              <!-- Play / Pause Circular Primary Button -->
-              <Button x:Name="BtnPlayPause" Style="{StaticResource ApplePrimaryCircleButton}"
-                      Margin="14,0" Click="BtnPlayPause_Click">
-                <Viewbox Width="18" Height="18" Stretch="Uniform">
-                  <Path x:Name="IconPlayPause" Data="{StaticResource PlayGeometry}" Fill="{StaticResource IslandPureBlackBrush}" />
-                </Viewbox>
-              </Button>
-
-              <!-- Next Button -->
-              <Button x:Name="BtnNext" Width="38" Height="38" Style="{StaticResource AppleIconButton}"
-                      Margin="12,0" Click="BtnNext_Click">
-                <Viewbox Width="16" Height="16" Stretch="Uniform">
-                  <Path Data="{StaticResource NextGeometry}" Fill="{StaticResource TextPrimaryBrush}" />
-                </Viewbox>
-              </Button>
-            </StackPanel>
           </Grid>
 
-          <!-- ==================== MODULE 2: VOLUME CONTROL ==================== -->
-          <Grid x:Name="ModuleSound" Grid.Row="1" Visibility="Collapsed">
-            <StackPanel VerticalAlignment="Center">
-              <!-- Top Row: Icon + Label + Percent -->
-              <Grid Margin="0,0,0,10">
-                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                  <Button x:Name="BtnMute" Width="32" Height="32" Style="{StaticResource AppleIconButton}" Margin="0,0,10,0" Click="BtnMute_Click">
-                    <Border Background="{StaticResource GlassSurfaceBrush}" CornerRadius="16" Width="32" Height="32">
-                      <Viewbox Width="15" Height="15" Stretch="Uniform">
-                        <Path x:Name="IconVolumeSpeaker" Data="{StaticResource VolumeWaveHighGeometry}"
-                              Fill="{StaticResource TextPrimaryBrush}" />
-                      </Viewbox>
-                    </Border>
-                  </Button>
-                  <StackPanel VerticalAlignment="Center">
-                    <TextBlock Text="Громкость системы" FontSize="13.5" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" />
-                    <TextBlock x:Name="TextMuteStatus" Text="Вывод звука активен" FontSize="10.5" Foreground="{StaticResource TextSecondaryBrush}" />
-                  </StackPanel>
-                </StackPanel>
+          <!-- Row 2: Transport Controls (Centered, generous bottom clearance) -->
+          <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,12,0,0">
+            <!-- Previous Button -->
+            <Button x:Name="BtnPrev" Width="40" Height="40" Style="{StaticResource AppleIconButton}"
+                    Margin="16,0" Click="BtnPrev_Click" ToolTip="Предыдущий трек">
+              <Viewbox Width="18" Height="18" Stretch="Uniform">
+                <Path Data="{StaticResource PrevGeometry}" Fill="{StaticResource TextPrimaryBrush}" />
+              </Viewbox>
+            </Button>
 
-                <TextBlock x:Name="ExpPercent" Text="50%" FontSize="20" FontWeight="Bold"
-                           Typography.NumeralAlignment="Tabular" Foreground="{StaticResource AccentGreenBrush}"
-                           HorizontalAlignment="Right" VerticalAlignment="Center" />
-              </Grid>
+            <!-- Play / Pause Circular Primary Button -->
+            <Button x:Name="BtnPlayPause" Style="{StaticResource ApplePrimaryCircleButton}"
+                    Width="44" Height="44" Margin="16,0" Click="BtnPlayPause_Click" ToolTip="Воспроизведение / Пауза">
+              <Viewbox Width="18" Height="18" Stretch="Uniform" Margin="2,0,0,0">
+                <Path x:Name="IconPlayPause" Data="{StaticResource PlayGeometry}" Fill="{StaticResource IslandPureBlackBrush}" />
+              </Viewbox>
+            </Button>
 
-              <!-- iOS Volume Capsule Slider -->
-              <Slider x:Name="ExpSlider" Style="{StaticResource AppleVolumeSlider}" Maximum="100" Value="50"
-                      ValueChanged="ExpSlider_ValueChanged" Margin="0,0,0,12" />
-
-              <!-- Quick Presets -->
-              <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                <Button Content="Mute" Style="{StaticResource ApplePresetPillButton}" Margin="4,0" Click="Preset_Click" Tag="0" />
-                <Button Content="25%" Style="{StaticResource ApplePresetPillButton}" Margin="4,0" Click="Preset_Click" Tag="25" />
-                <Button Content="50%" Style="{StaticResource ApplePresetPillButton}" Margin="4,0" Click="Preset_Click" Tag="50" />
-                <Button Content="75%" Style="{StaticResource ApplePresetPillButton}" Margin="4,0" Click="Preset_Click" Tag="75" />
-                <Button Content="100%" Style="{StaticResource ApplePresetPillButton}" Margin="4,0" Click="Preset_Click" Tag="100" />
-              </StackPanel>
-            </StackPanel>
-          </Grid>
-
-          <!-- ==================== MODULE 3: CLOCK & STOPWATCH ==================== -->
-          <Grid x:Name="ModuleClock" Grid.Row="1" Visibility="Collapsed">
-            <Grid.ColumnDefinitions>
-              <ColumnDefinition Width="*" />
-              <ColumnDefinition Width="Auto" />
-              <ColumnDefinition Width="*" />
-            </Grid.ColumnDefinitions>
-
-            <!-- Left: Apple Watch Digital Time & Russian Date -->
-            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-              <TextBlock x:Name="TextBigTime" Text="12:00:00" FontSize="32" FontWeight="Bold"
-                         Typography.NumeralAlignment="Tabular" Foreground="{StaticResource TextPrimaryBrush}" HorizontalAlignment="Center" />
-              <TextBlock x:Name="TextBigDate" Text="Среда, 18 ноября 2026" FontSize="12" Margin="0,4,0,0"
-                         Foreground="{StaticResource TextSecondaryBrush}" HorizontalAlignment="Center" />
-            </StackPanel>
-
-            <!-- Divider -->
-            <Border Grid.Column="1" Width="1" Margin="14,6" Background="{StaticResource GlassSurfaceHoverBrush}" />
-
-            <!-- Right: Stopwatch with iOS Buttons -->
-            <StackPanel Grid.Column="2" VerticalAlignment="Center" HorizontalAlignment="Center">
-              <TextBlock Text="СЕКУНДОМЕР" FontSize="9.5" FontWeight="Bold" Foreground="{StaticResource AccentOrangeBrush}" HorizontalAlignment="Center" Margin="0,0,0,3" />
-              <TextBlock x:Name="TextStopwatch" Text="00:00.0" FontSize="22" FontWeight="SemiBold"
-                         Typography.NumeralAlignment="Tabular" Foreground="{StaticResource TextPrimaryBrush}" HorizontalAlignment="Center" />
-
-              <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,8,0,0">
-                <Button x:Name="BtnSwStartPause" Content="Старт" Width="60" Height="28" FontSize="11" FontWeight="SemiBold"
-                        Style="{StaticResource ApplePresetPillButton}" Background="{StaticResource AccentGreenBrush}"
-                        Foreground="{StaticResource IslandPureBlackBrush}" BorderThickness="0" Margin="4,0"
-                        Click="BtnSwStartPause_Click" />
-                <Button x:Name="BtnSwReset" Content="Сброс" Width="60" Height="28" FontSize="11" FontWeight="SemiBold"
-                        Style="{StaticResource ApplePresetPillButton}" Margin="4,0" Click="BtnSwReset_Click" />
-              </StackPanel>
-            </StackPanel>
-          </Grid>
-
-          <!-- ==================== MODULE 4: WEATHER ==================== -->
-          <Grid x:Name="ModuleWeather" Grid.Row="1" Visibility="Collapsed">
-            <!-- Bento Card -->
-            <Border Background="{StaticResource GlassSurfaceBrush}" CornerRadius="18" Padding="18,12">
-              <Grid VerticalAlignment="Center">
-                <Grid.ColumnDefinitions>
-                  <ColumnDefinition Width="Auto" />
-                  <ColumnDefinition Width="*" />
-                  <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
-
-                <!-- Weather Vector Icon / Glyph -->
-                <Viewbox Width="44" Height="44" Stretch="Uniform" Margin="0,0,16,0" VerticalAlignment="Center">
-                  <Path Data="{StaticResource WeatherSunCloudGeometry}" Fill="{StaticResource AccentBlueBrush}" />
-                </Viewbox>
-
-                <!-- Details -->
-                <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                  <StackPanel Orientation="Horizontal">
-                    <TextBlock x:Name="TextExpTemp" Text="+18°" FontSize="34" FontWeight="Light"
-                               Typography.NumeralAlignment="Tabular" Foreground="{StaticResource TextPrimaryBrush}" />
-                    <TextBlock x:Name="TextCity" Text="Москва • Ясно" FontSize="13" FontWeight="SemiBold"
-                               Foreground="{StaticResource TextSecondaryBrush}" Margin="12,12,0,0" />
-                  </StackPanel>
-                  <TextBlock x:Name="TextDesc" Text="Без осадков, влажность 65%" FontSize="11.5" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,2,0,0" />
-                </StackPanel>
-
-                <!-- Circular Refresh Button -->
-                <Button x:Name="BtnRefresh" Grid.Column="2" Width="32" Height="32" Style="{StaticResource AppleIconButton}"
-                        VerticalAlignment="Center" Click="BtnRefresh_Click">
-                  <Border Background="{StaticResource GlassSurfaceHoverBrush}" CornerRadius="16" Width="32" Height="32">
-                    <Viewbox Width="14" Height="14" Stretch="Uniform">
-                      <Path Data="{StaticResource RefreshGeometry}" Fill="{StaticResource TextPrimaryBrush}" />
-                    </Viewbox>
-                  </Border>
-                </Button>
-              </Grid>
-            </Border>
-          </Grid>
-
-          <!-- ==================== MODULE 5: PC TELEMETRY ==================== -->
-          <Grid x:Name="ModulePC" Grid.Row="1" Visibility="Collapsed">
-            <Grid.ColumnDefinitions>
-              <ColumnDefinition Width="*" />
-              <ColumnDefinition Width="*" />
-              <ColumnDefinition Width="*" />
-            </Grid.ColumnDefinitions>
-
-            <!-- CPU Bento Card -->
-            <Border Grid.Column="0" Background="{StaticResource GlassSurfaceBrush}" CornerRadius="16" Padding="12,10" Margin="0,0,5,0">
-              <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-                <TextBlock Text="CPU" FontSize="10" FontWeight="Bold" Foreground="{StaticResource AccentPurpleBrush}" HorizontalAlignment="Center" />
-                <TextBlock x:Name="TextExpCpu" Text="12%" FontSize="22" FontWeight="Bold"
-                           Typography.NumeralAlignment="Tabular" Foreground="{StaticResource TextPrimaryBrush}" HorizontalAlignment="Center" Margin="0,4" />
-                <ProgressBar x:Name="BarCpu" Height="4" Width="82" Maximum="100" Value="12"
-                             Foreground="{StaticResource AccentPurpleBrush}" Background="{StaticResource GlassSurfaceHoverBrush}" BorderThickness="0">
-                  <ProgressBar.Resources><Style TargetType="Border"><Setter Property="CornerRadius" Value="2" /></Style></ProgressBar.Resources>
-                </ProgressBar>
-              </StackPanel>
-            </Border>
-
-            <!-- RAM Bento Card -->
-            <Border Grid.Column="1" Background="{StaticResource GlassSurfaceBrush}" CornerRadius="16" Padding="12,10" Margin="3,0,3,0">
-              <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-                <TextBlock Text="RAM" FontSize="10" FontWeight="Bold" Foreground="{StaticResource AccentBlueBrush}" HorizontalAlignment="Center" />
-                <TextBlock x:Name="TextExpRam" Text="48%" FontSize="22" FontWeight="Bold"
-                           Typography.NumeralAlignment="Tabular" Foreground="{StaticResource TextPrimaryBrush}" HorizontalAlignment="Center" Margin="0,4" />
-                <ProgressBar x:Name="BarRam" Height="4" Width="82" Maximum="100" Value="48"
-                             Foreground="{StaticResource AccentBlueBrush}" Background="{StaticResource GlassSurfaceHoverBrush}" BorderThickness="0">
-                  <ProgressBar.Resources><Style TargetType="Border"><Setter Property="CornerRadius" Value="2" /></Style></ProgressBar.Resources>
-                </ProgressBar>
-              </StackPanel>
-            </Border>
-
-            <!-- Battery Bento Card -->
-            <Border Grid.Column="2" Background="{StaticResource GlassSurfaceBrush}" CornerRadius="16" Padding="12,10" Margin="5,0,0,0">
-              <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-                <TextBlock x:Name="LabelBattery" Text="BAT" FontSize="10" FontWeight="Bold" Foreground="{StaticResource AccentGreenBrush}" HorizontalAlignment="Center" />
-                <TextBlock x:Name="TextExpBattery" Text="100%" FontSize="22" FontWeight="Bold"
-                           Typography.NumeralAlignment="Tabular" Foreground="{StaticResource TextPrimaryBrush}" HorizontalAlignment="Center" Margin="0,4" />
-                <ProgressBar x:Name="BarBattery" Height="4" Width="82" Maximum="100" Value="100"
-                             Foreground="{StaticResource AccentGreenBrush}" Background="{StaticResource GlassSurfaceHoverBrush}" BorderThickness="0">
-                  <ProgressBar.Resources><Style TargetType="Border"><Setter Property="CornerRadius" Value="2" /></Style></ProgressBar.Resources>
-                </ProgressBar>
-              </StackPanel>
-            </Border>
-          </Grid>
-
-          <!-- ==================== MODULE 6: FILE SHELF ==================== -->
-          <Grid x:Name="ModuleShelf" Grid.Row="1" Visibility="Collapsed">
-            <Border Background="#141416" BorderBrush="{StaticResource GlassSurfaceHoverBrush}"
-                    BorderThickness="1" CornerRadius="16" Padding="12">
-              <Grid>
-                <Grid.RowDefinitions>
-                  <RowDefinition Height="Auto" />
-                  <RowDefinition Height="*" />
-                </Grid.RowDefinitions>
-
-                <Grid Grid.Row="0" Margin="0,0,0,6">
-                  <TextBlock Text="ВРЕМЕННАЯ ПОЛКА" FontSize="9.5" FontWeight="Bold" Foreground="{StaticResource TextSecondaryBrush}" />
-                  <Button x:Name="BtnClearAll" Content="Очистить" Style="{StaticResource AppleIconButton}"
-                          FontSize="10.5" Foreground="{StaticResource AccentBlueBrush}" HorizontalAlignment="Right" Click="BtnClearAll_Click" />
-                </Grid>
-
-                <Grid Grid.Row="1">
-                  <!-- Dashed Dropzone Prompt -->
-                  <Border x:Name="DropPrompt" BorderBrush="{StaticResource GlassSurfaceHoverBrush}" BorderThickness="1"
-                          CornerRadius="12" Background="Transparent" Margin="2">
-                    <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-                      <Viewbox Width="22" Height="22" Stretch="Uniform" HorizontalAlignment="Center" Margin="0,0,0,4">
-                        <Path Data="{StaticResource FolderIconGeometry}" Fill="{StaticResource TextSecondaryBrush}" />
-                      </Viewbox>
-                      <TextBlock Text="Перетащите файлы сюда для быстрого доступа" FontSize="11"
-                                 Foreground="{StaticResource TextSecondaryBrush}" HorizontalAlignment="Center" />
-                    </StackPanel>
-                  </Border>
-
-                  <!-- List of Dropped Files -->
-                  <ListBox x:Name="ListFiles" Background="Transparent" BorderThickness="0" Foreground="{StaticResource TextPrimaryBrush}"
-                           ScrollViewer.HorizontalScrollBarVisibility="Disabled" Visibility="Collapsed">
-                    <ListBox.ItemTemplate>
-                      <DataTemplate>
-                        <Grid Margin="0,2">
-                          <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="Auto" />
-                          </Grid.ColumnDefinitions>
-                          <TextBlock Text="📄" FontSize="13" Margin="0,0,6,0" VerticalAlignment="Center" />
-                          <TextBlock Grid.Column="1" Text="{Binding Name}" FontSize="11.5" FontWeight="SemiBold"
-                                     TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
-                          <Button Grid.Column="2" Content="Копия" Style="{StaticResource ApplePresetPillButton}"
-                                  Height="22" Margin="4,0" Click="BtnCopyFile_Click" Tag="{Binding Path}" />
-                          <Button Grid.Column="3" Content="Открыть" Style="{StaticResource ApplePresetPillButton}"
-                                  Height="22" Margin="2,0" Click="BtnOpenFile_Click" Tag="{Binding Path}" />
-                        </Grid>
-                      </DataTemplate>
-                    </ListBox.ItemTemplate>
-                  </ListBox>
-                </Grid>
-              </Grid>
-            </Border>
-          </Grid>
+            <!-- Next Button -->
+            <Button x:Name="BtnNext" Width="40" Height="40" Style="{StaticResource AppleIconButton}"
+                    Margin="16,0" Click="BtnNext_Click" ToolTip="Следующий трек">
+              <Viewbox Width="18" Height="18" Stretch="Uniform">
+                <Path Data="{StaticResource NextGeometry}" Fill="{StaticResource TextPrimaryBrush}" />
+              </Viewbox>
+            </Button>
+          </StackPanel>
 
         </Grid>
 
