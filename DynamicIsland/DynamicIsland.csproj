@@ -42,8 +42,8 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.Diagnostics.Tracing.TraceEvent" Version="4.0.0" />
     <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.4314.35" />
-    <PackageReference Include="NAudio.Wasapi" Version="3.3.0" />
-    <PackageReference Include="NAudio.WinMM" Version="3.3.0" />
+    <PackageReference Include="NAudio.Wasapi" Version="2.2.1" />
+    <PackageReference Include="NAudio.WinMM" Version="2.2.1" />
     <PackageReference Include="ScreenRecorderLib" Version="7.0.1" />
     <PackageReference Include="ZXing.Net" Version="0.16.11" />
   </ItemGroup>
