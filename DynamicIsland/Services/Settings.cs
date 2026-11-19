@@ -62,7 +62,7 @@ public sealed class Settings
     /// <summary>Characters look hand-drawn: ink outlines that "boil", animated on twos (12 fps).</summary>
     public bool HandDrawn { get; set; }
     /// <summary>Frosted glass: the desktop behind the island, blurred, under a tint.</summary>
-    public bool Glass { get; set; } = true;
+    public bool Glass { get; set; } = false;
     public bool ShowCapsLock { get; set; } = true;
     /// <summary>Volume and screen brightness: a level beside the island while they change.</summary>
     public bool ShowLevels { get; set; } = true;

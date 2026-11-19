@@ -13,12 +13,7 @@ public partial class MainWindow
 
     private void InitClaude()
     {
-        _bridge.PermissionRequested += req => Dispatcher.BeginInvoke(() => EnqueuePermission(req));
-        _bridge.Notified += n => Dispatcher.BeginInvoke(() => OnClaudeNotice(n));
-        _bridge.Start();
-        // test and picture runs leave the user's ~/.claude and ~/.codex alone
-        if (!App.TestRun) ClaudeHooks.RefreshScript();
-        FillChatProviders();
+        // AI Bridge and chat hooks completely disabled
     }
 
     private void EnqueuePermission(ClaudeBridge.PermissionRequest req)

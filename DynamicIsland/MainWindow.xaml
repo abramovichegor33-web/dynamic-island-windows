@@ -265,7 +265,7 @@
             <RadioButton x:Name="TabHome" Style="{StaticResource TabButton}" GroupName="Tabs" Content="Главная" Tag="&#xE80F;" IsChecked="True" Checked="Tab_Checked"/>
             <RadioButton x:Name="TabMusic" Style="{StaticResource TabButton}" GroupName="Tabs" Content="Музыка" Tag="&#xE8D6;" Checked="Tab_Checked"/>
             <RadioButton x:Name="TabWeather" Style="{StaticResource TabButton}" GroupName="Tabs" Content="Погода" Tag="&#xE706;" Checked="Tab_Checked"/>
-            <RadioButton x:Name="TabChat" Style="{StaticResource TabButton}" GroupName="Tabs" Content="Чат" Tag="&#xE8BD;" Checked="Tab_Checked"/>
+            <RadioButton x:Name="TabChat" Visibility="Collapsed" Style="{StaticResource TabButton}" GroupName="Tabs" Content="Чат" Tag="&#xE8BD;" Checked="Tab_Checked"/>
             <RadioButton x:Name="TabTimer" Style="{StaticResource TabButton}" GroupName="Tabs" Content="Таймер" Tag="&#xE916;" Checked="Tab_Checked"/>
             <RadioButton x:Name="TabClip" Style="{StaticResource TabButton}" GroupName="Tabs" Content="Буфер" Tag="&#xE77F;" Checked="Tab_Checked"/>
             <RadioButton x:Name="TabNotes" Style="{StaticResource TabButton}" GroupName="Tabs" Content="Заметки" Tag="&#xE70B;" Checked="Tab_Checked"/>

@@ -83,40 +83,13 @@ public partial class MainWindow
     private int _brightnessWas = -1;
     private bool _brightnessBusy;
 
-    /// <summary>The built-in screen's brightness, 0…100, or -1 (a desktop monitor has none to ask about).</summary>
-    private int ReadBrightness()
-    {
-        if (_noLcd) return -1;
-        try
-        {
-            if (_lcd == null || _lcd.IsInvalid)
-            {
-                _lcd = CreateFile(@"\\.\LCD", 0, 3, IntPtr.Zero, 3, 0, IntPtr.Zero);
-                if (_lcd.IsInvalid) { _noLcd = true; return -1; }
-            }
-            var buf = new byte[3];   // policy, on mains, on battery
-            if (!DeviceIoControl(_lcd, IoctlQueryBrightness, IntPtr.Zero, 0, buf, 3, out uint got, IntPtr.Zero) || got < 3) { _noLcd = true; return -1; }
-            bool mains = System.Windows.Forms.SystemInformation.PowerStatus.PowerLineStatus != System.Windows.Forms.PowerLineStatus.Offline;
-            return mains ? buf[1] : buf[2];
-        }
-        catch { _noLcd = true; return -1; }
-    }
+    /// <summary>Disabled to avoid monitor bus polling and game micro-stutters.</summary>
+    private int ReadBrightness() => -1;
 
     /// <summary>
-    /// ~4 times a second (from OnTick). The screen driver is asked on a background thread: some drivers take
-    /// their time, and the island must not wait for them.
+    /// Disabled to avoid display driver polling 4 times a second.
     /// </summary>
     private void WatchBrightness()
     {
-        if (!_settings.ShowLevels || _noLcd || _demoMedia != null || _brightnessBusy) return;
-        _brightnessBusy = true;
-        Task.Run(ReadBrightness).ContinueWith(t =>
-        {
-            _brightnessBusy = false;
-            if (t.IsFaulted || t.Result < 0 || !_settings.ShowLevels) return;
-            int b = t.Result;
-            if (_brightnessWas >= 0 && b != _brightnessWas) ShowLevel("\uE706", L.T("Яркость"), b / 100.0, "brightness");
-            _brightnessWas = b;
-        }, TaskScheduler.FromCurrentSynchronizationContext());
     }
 }

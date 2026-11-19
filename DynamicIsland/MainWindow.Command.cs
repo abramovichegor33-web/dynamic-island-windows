@@ -165,7 +165,6 @@ public partial class MainWindow
         (["настройки", "settings"], L.T("Настройки"), "", () => OpenTab(TabSettings)),
         (["погода", "weather"], L.T("Погода"), "", () => OpenTab(TabWeather)),
         (["музыка", "music", "плеер"], L.T("Музыка"), "", () => OpenTab(TabMusic)),
-        (["чат", "chat", "claude", "gemini", "deepseek", "ии", "ai"], L.T("Чат с ИИ"), "", () => OpenTab(TabChat)),
         (["буфер", "clipboard", "полка", "история"], L.T("Буфер обмена"), "", () => OpenTab(TabClip)),
         (["заметки", "заметка", "notes"], L.T("Заметки"), "", () => OpenTab(TabNotes)),
         (["календарь", "calendar", "напоминания"], L.T("Календарь"), "", () => OpenTab(TabCalendar)),

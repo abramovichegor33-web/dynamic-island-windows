@@ -77,18 +77,6 @@ public sealed class ClaudeBridge
 
     public void Start()
     {
-        try
-        {
-            _ = Token.Value;   // the hook script needs the secret on disk before the first call
-            _listener = new HttpListener();
-            _listener.Prefixes.Add($"http://localhost:{Port}/");
-            _listener.Start();
-            _ = Task.Run(LoopAsync);
-        }
-        catch
-        {
-            _listener = null; // port busy or not allowed - island works without the bridge
-        }
     }
 
     private async Task LoopAsync()

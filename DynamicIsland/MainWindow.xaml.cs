@@ -1492,7 +1492,7 @@ public partial class MainWindow : Window
         }
     }
 
-    private RadioButton[] Tabs => [TabHome, TabMusic, TabWeather, TabChat, TabTimer, TabClip, TabNotes, TabCalendar, TabSystem, TabSettings];
+    private RadioButton[] Tabs => [TabHome, TabMusic, TabWeather, TabTimer, TabClip, TabNotes, TabCalendar, TabSystem, TabSettings];
 
     private FrameworkElement[] AllPages => [HomePage, MusicPage, WeatherPage, ChatPage, TimerPage, ClipPage, NotesPage, CalendarPage, SystemPage, SettingsPage];
 

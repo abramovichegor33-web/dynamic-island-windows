@@ -38,7 +38,7 @@ public partial class MainWindow
     private void InitGlass()
     {
         _frostTimer.Tick += (_, _) => Measure("frost", CaptureFrost);
-        _frostTimer.Start();
+        if (_settings.Glass) _frostTimer.Start();
         ApplyGlass();
         SetupAura();
         UpdatePageDots();
@@ -67,7 +67,17 @@ public partial class MainWindow
         UpdateGlassFill();
         ApplyCaptureExclusion();
         FrostHost.Visibility = _settings.Glass && !_dragging ? Visibility.Visible : Visibility.Collapsed;
-        if (_settings.Glass) CaptureFrost();
+        if (_settings.Glass)
+        {
+            if (!_frostTimer.IsEnabled) _frostTimer.Start();
+            CaptureFrost();
+        }
+        else
+        {
+            _frostTimer.Stop();
+            FrostHost.Opacity = 0;
+            SetFrostCovers(false);
+        }
         UpdateAuraVisibility();
     }
 
@@ -81,8 +91,8 @@ public partial class MainWindow
         bool overPicture = photo || (_settings.Glass && !Lite && _frostCovers);
         double tint = overPicture && !photo ? Math.Clamp(_settings.GlassTint, 20, 100) / 100.0 : 1;
         if (overPicture && !photo && LiquidGlass) tint = Math.Min(tint, 0.58);
-        // the folded pill stays readable: never thinner than 80 %
-        double body = expanded ? tint : Math.Max(tint, 0.8);
+        // pure solid OLED black when not over a picture
+        double body = overPicture ? (expanded ? tint : Math.Max(tint, 0.8)) : 1.0;
         // your photo shows through a lighter tint (still dark enough for white text)
         if (photo) body = expanded ? 0.5 : 0.62;
         double bottom = _settings.BottomFade && overPicture ? body * (expanded ? 0.55 : 0.45) : body;
@@ -167,7 +177,7 @@ public partial class MainWindow
 
     private void CaptureFrost()
     {
-        if (!_settings.Glass || Lite || !FrostCanGrab || _hidden || _fullscreenHidden || !IsLoaded || !Island.IsVisible) { if (Lite || !FrostCanGrab) FrostHost.Opacity = 0; SetFrostCovers(false); return; }
+        if (!_settings.Glass || Lite || !FrostCanGrab || _hidden || _fullscreenHidden || !IsLoaded || !Island.IsVisible) { FrostHost.Opacity = 0; SetFrostCovers(false); return; }
         if (_dragging || _posActive) { FrostHost.Opacity = 0; SetFrostCovers(false); return; }
         // grabbing the screen makes Windows finish composing first: never while the size is changing
         if (_rendering && !(_w.IsSettled && _h.IsSettled)) return;
