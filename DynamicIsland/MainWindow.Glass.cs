@@ -526,7 +526,13 @@ public partial class MainWindow
         bool first = true;
         foreach (StackPanel section in SettingsSections.Children)
         {
-            var parts = ((string)section.Tag).Split('|');
+            if (section.Tag is not string tag || string.IsNullOrWhiteSpace(tag)) continue;
+            var parts = tag.Split('|');
+            if (parts[0].Contains("ИИ") || parts[0].Contains("AI") || parts[0].Contains("Claude") || parts[0].Contains("Gemini"))
+            {
+                section.Visibility = Visibility.Collapsed;
+                continue;
+            }
             var nav = new RadioButton { Style = (Style)FindResource("SideNav"), GroupName = "SettingsNav", Content = parts[0], Tag = parts[1] };
             var sec = section;
             nav.Checked += (_, _) =>

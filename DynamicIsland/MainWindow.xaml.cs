@@ -1492,18 +1492,21 @@ public partial class MainWindow : Window
         }
     }
 
-    private RadioButton[] Tabs => [TabHome, TabMusic, TabWeather, TabTimer, TabClip, TabNotes, TabCalendar, TabSystem, TabSettings];
+    private RadioButton[] Tabs => [TabHome, TabMusic, TabWeather, TabChat, TabTimer, TabClip, TabNotes, TabCalendar, TabSystem, TabSettings];
 
     private FrameworkElement[] AllPages => [HomePage, MusicPage, WeatherPage, ChatPage, TimerPage, ClipPage, NotesPage, CalendarPage, SystemPage, SettingsPage];
 
-    private FrameworkElement CurrentPage
-    {
-        get
-        {
-            int i = Array.FindIndex(Tabs, t => t.IsChecked == true);
-            return AllPages[Math.Max(0, i)];
-        }
-    }
+    private FrameworkElement CurrentPage =>
+        TabHome.IsChecked == true ? HomePage :
+        TabMusic.IsChecked == true ? MusicPage :
+        TabWeather.IsChecked == true ? WeatherPage :
+        TabTimer.IsChecked == true ? TimerPage :
+        TabClip.IsChecked == true ? ClipPage :
+        TabNotes.IsChecked == true ? NotesPage :
+        TabCalendar.IsChecked == true ? CalendarPage :
+        TabSystem.IsChecked == true ? SystemPage :
+        TabSettings.IsChecked == true ? SettingsPage :
+        HomePage;
 
     private Size TargetSize(Mode mode)
     {

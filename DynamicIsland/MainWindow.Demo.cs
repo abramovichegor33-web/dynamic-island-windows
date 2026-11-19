@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -223,7 +223,7 @@ public partial class MainWindow
         // Claude Code typing over the chat window
         _settings.Character = "clawd";
         SetupAura();
-        TabChat.IsChecked = true;
+        TabTimer.IsChecked = true;
         await Task.Delay(2500);
         _chatTypedAt = DateTime.Now.AddSeconds(30); // pretend you keep typing
         await Task.Delay(900);

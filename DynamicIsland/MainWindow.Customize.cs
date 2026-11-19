@@ -202,7 +202,7 @@ public partial class MainWindow
             TabStrip.Children.Add(t);
             t.Visibility = PageTabs.Contains(t) ? Visibility.Visible : Visibility.Collapsed;
         }
-        if (PageTabs.All(t => t.IsChecked != true) && TabSettings.IsChecked != true) TabHome.IsChecked = true;
+        if (TabChat.IsChecked == true || (PageTabs.All(t => t.IsChecked != true) && TabSettings.IsChecked != true)) TabHome.IsChecked = true;
         DotsRow.Children.Clear();
         UpdatePageDots();
     }
